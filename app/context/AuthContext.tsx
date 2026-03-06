@@ -109,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const login = useCallback(async (email: string, senha: string): Promise<void> => {
         const trimmedEmail = email.trim();
         const trimmedSenha = senha.trim();
-        const validEmail = (trimmedEmail.includes('@') ? trimmedEmail : `${trimmedEmail}@app.com`).toLowerCase();
+        const validEmail = (trimmedEmail.includes('@') ? trimmedEmail : `${trimmedEmail}@app.com`);
 
         try {
             await signInWithEmailAndPassword(auth, validEmail, trimmedSenha);
