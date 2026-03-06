@@ -1,6 +1,16 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { db } from '../firebase/config';
+import {
+  collection,
+  onSnapshot,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query
+} from 'firebase/firestore';
 
 // ============ TYPES ============
 
@@ -88,61 +98,92 @@ export interface AnotacaoLivre {
   atualizadoEm: string;
 }
 
+export interface ItemEstoque {
+  id: string;
+  nome: string;
+  categoria: 'EPI' | 'Ferramenta' | 'Consumível';
+  quantidade: number;
+  unidade: string; // 'un', 'par', 'kg', 'm', 'caixa'
+  estoqueMinimo: number;
+  criadoEm: string;
+}
+
+export interface MovimentacaoEstoque {
+  id: string;
+  itemId: string;
+  tipo: 'entrada' | 'saida' | 'devolucao';
+  quantidade: number;
+  data: string; // YYYY-MM-DD
+  funcionarioId?: string; // Optional, only for saida/devolucao
+  observacao: string;
+  criadoEm: string;
+}
+
 interface DataContextType {
   // Empresas
   empresas: Empresa[];
-  addEmpresa: (e: Omit<Empresa, 'id' | 'criadoEm'>) => void;
-  updateEmpresa: (id: string, e: Partial<Empresa>) => void;
-  deleteEmpresa: (id: string) => void;
+  addEmpresa: (e: Omit<Empresa, 'id' | 'criadoEm'>) => Promise<void>;
+  updateEmpresa: (id: string, e: Partial<Empresa>) => Promise<void>;
+  deleteEmpresa: (id: string) => Promise<void>;
 
   // Funcionários
   funcionarios: Funcionario[];
-  addFuncionario: (f: Omit<Funcionario, 'id' | 'criadoEm'>) => void;
-  updateFuncionario: (id: string, f: Partial<Funcionario>) => void;
-  deleteFuncionario: (id: string) => void;
+  addFuncionario: (f: Omit<Funcionario, 'id' | 'criadoEm'>) => Promise<void>;
+  updateFuncionario: (id: string, f: Partial<Funcionario>) => Promise<void>;
+  deleteFuncionario: (id: string) => Promise<void>;
 
   // Ponto
   registrosPonto: RegistroPonto[];
-  addRegistroPonto: (r: Omit<RegistroPonto, 'id' | 'horasTrabalhadas'>) => void;
-  deleteRegistroPonto: (id: string) => void;
+  addRegistroPonto: (r: Omit<RegistroPonto, 'id' | 'horasTrabalhadas'>) => Promise<void>;
+  deleteRegistroPonto: (id: string) => Promise<void>;
 
   // Financeiro
   transacoes: Transacao[];
-  addTransacao: (t: Omit<Transacao, 'id'>) => void;
-  deleteTransacao: (id: string) => void;
+  addTransacao: (t: Omit<Transacao, 'id'>) => Promise<void>;
+  deleteTransacao: (id: string) => Promise<void>;
 
   // Faturamento
   notas: NotaFaturamento[];
-  addNota: (n: Omit<NotaFaturamento, 'id' | 'criadoEm'>) => void;
-  updateNotaStatus: (id: string, status: 'pendente' | 'pago') => void;
-  deleteNota: (id: string) => void;
+  addNota: (n: Omit<NotaFaturamento, 'id' | 'criadoEm'>) => Promise<void>;
+  updateNotaStatus: (id: string, status: 'pendente' | 'pago') => Promise<void>;
+  deleteNota: (id: string) => Promise<void>;
 
   // Agenda
   tarefas: Tarefa[];
-  addTarefa: (t: Omit<Tarefa, 'id' | 'criadoEm'>) => void;
-  updateTarefa: (id: string, t: Partial<Tarefa>) => void;
-  deleteTarefa: (id: string) => void;
+  addTarefa: (t: Omit<Tarefa, 'id' | 'criadoEm'>) => Promise<void>;
+  updateTarefa: (id: string, t: Partial<Tarefa>) => Promise<void>;
+  deleteTarefa: (id: string) => Promise<void>;
 
   // Bloco de Notas Livre
   anotacoes: AnotacaoLivre[];
-  addAnotacao: (a: Omit<AnotacaoLivre, 'id' | 'criadoEm' | 'atualizadoEm'>) => void;
-  updateAnotacao: (id: string, a: Partial<AnotacaoLivre>) => void;
-  deleteAnotacao: (id: string) => void;
+  addAnotacao: (a: Omit<AnotacaoLivre, 'id' | 'criadoEm' | 'atualizadoEm'>) => Promise<void>;
+  updateAnotacao: (id: string, a: Partial<AnotacaoLivre>) => Promise<void>;
+  deleteAnotacao: (id: string) => Promise<void>;
+
+  // Almoxarifado
+  itensEstoque: ItemEstoque[];
+  addItemEstoque: (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => Promise<void>;
+  updateItemEstoque: (id: string, i: Partial<ItemEstoque>) => Promise<void>;
+  deleteItemEstoque: (id: string) => Promise<void>;
+
+  movimentacoesEstoque: MovimentacaoEstoque[];
+  registrarMovimentacaoEstoque: (m: Omit<MovimentacaoEstoque, 'id' | 'criadoEm'>) => Promise<void>;
+
+  // Util
+  isMigrationLoading: boolean;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-}
-
 function calcularHoras(entrada: string, saida: string): number {
+  if (!entrada || !saida) return 0;
   const [hE, mE] = entrada.split(':').map(Number);
   const [hS, mS] = saida.split(':').map(Number);
   const totalMinutos = (hS * 60 + mS) - (hE * 60 + mE);
   return Math.max(0, Math.round((totalMinutos / 60) * 100) / 100);
 }
 
+// Keep loadFromStorage/saveToStorage specifically for the backup file creation script & migration loading state
 function loadFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -162,6 +203,7 @@ function saveToStorage<T>(key: string, data: T): void {
   }
 }
 
+
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [funcionarios, setFuncionarios] = useState<Funcionario[]>([]);
@@ -170,210 +212,308 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [notas, setNotas] = useState<NotaFaturamento[]>([]);
   const [tarefas, setTarefas] = useState<Tarefa[]>([]);
   const [anotacoes, setAnotacoes] = useState<AnotacaoLivre[]>([]);
+  const [itensEstoque, setItensEstoque] = useState<ItemEstoque[]>([]);
+  const [movimentacoesEstoque, setMovimentacoesEstoque] = useState<MovimentacaoEstoque[]>([]);
+
   const [loaded, setLoaded] = useState(false);
+  const [isMigrationLoading, setIsMigrationLoading] = useState(false);
 
-  // Load from localStorage on mount
+  // Setup Firebase Listeners
   useEffect(() => {
-    setEmpresas(loadFromStorage('empresas', []));
-    setFuncionarios(loadFromStorage('funcionarios', []));
-    setRegistrosPonto(loadFromStorage('registrosPonto', []));
-
-    // Migrate old notas format to new format with itens[]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const rawNotas = loadFromStorage<any[]>('notas', []);
-    const migratedNotas: NotaFaturamento[] = rawNotas.map((n: any) => {
-      if (n.itens && Array.isArray(n.itens)) {
-        return n as NotaFaturamento; // Already new format
-      }
-      // Migrate old format: convert single employee fields to itens[]
-      return {
-        id: n.id,
-        itens: [{
-          funcionarioId: n.funcionarioId || '',
-          funcionarioNome: n.funcionarioNome || '',
-          totalHoras: n.totalHoras || 0,
-          valorHora: n.valorHora || 0,
-          subtotal: n.totalValor || 0,
-        }],
-        empresaId: n.empresaId || '',
-        empresaNome: n.empresaNome || '',
-        empresaCnpj: n.empresaCnpj || '',
-        mes: n.mes || '',
-        totalValor: n.totalValor || 0,
-        criadoEm: n.criadoEm || new Date().toISOString(),
-        status: n.status || 'pendente',
-      } as NotaFaturamento;
+    // Escuta empresas
+    const unsubEmpresas = onSnapshot(query(collection(db, 'empresas')), (querySnapshot) => {
+      const docs: Empresa[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as Empresa));
+      setEmpresas(docs);
     });
-    setNotas(migratedNotas);
 
-    // Sync: ensure all paid notas have a matching transaction in Financeiro
-    // Deduplicate existing transactions first to clean up any past bugs
-    const storedTransacoes: Transacao[] = loadFromStorage('transacoes', []);
-    const uniqueTransacoes: Transacao[] = [];
-    const seenIds = new Set<string>();
-    for (const t of storedTransacoes) {
-      if (!seenIds.has(t.id)) {
-        uniqueTransacoes.push(t);
-        seenIds.add(t.id);
-      }
-    }
-    const newTransacoes = [...uniqueTransacoes];
-    for (const nota of migratedNotas) {
-      if (nota.status === 'pago') {
-        const transacaoId = `nota-${nota.id}`;
-        const exists = newTransacoes.find(t => t.id === transacaoId);
-        if (!exists) {
-          const nomes = nota.itens?.map(i => i.funcionarioNome).join(', ') || 'Nota';
-          newTransacoes.push({
-            id: transacaoId,
-            data: nota.criadoEm?.split('T')[0] || new Date().toISOString().split('T')[0],
-            descricao: `Nota de Honorários: ${nomes}`,
-            tipo: 'entrada',
-            valor: nota.totalValor,
-            categoria: 'Faturamento',
-          });
-        }
-      }
-    }
-    setTransacoes(newTransacoes);
+    const unsubFuncionarios = onSnapshot(query(collection(db, 'funcionarios')), (querySnapshot) => {
+      const docs: Funcionario[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as Funcionario));
+      setFuncionarios(docs);
+    });
 
-    setTarefas(loadFromStorage('tarefas', []));
-    setAnotacoes(loadFromStorage('anotacoes', []));
+    const unsubPonto = onSnapshot(query(collection(db, 'registrosPonto')), (querySnapshot) => {
+      const docs: RegistroPonto[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as RegistroPonto));
+      setRegistrosPonto(docs);
+    });
+
+    const unsubTransacoes = onSnapshot(query(collection(db, 'transacoes')), (querySnapshot) => {
+      const docs: Transacao[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as Transacao));
+      setTransacoes(docs);
+    });
+
+    const unsubNotas = onSnapshot(query(collection(db, 'notas')), (querySnapshot) => {
+      const docs: NotaFaturamento[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as NotaFaturamento));
+      setNotas(docs);
+    });
+
+    const unsubTarefas = onSnapshot(query(collection(db, 'tarefas')), (querySnapshot) => {
+      const docs: Tarefa[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as Tarefa));
+      setTarefas(docs);
+    });
+
+    const unsubAnotacoes = onSnapshot(query(collection(db, 'anotacoes')), (querySnapshot) => {
+      const docs: AnotacaoLivre[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as AnotacaoLivre));
+      setAnotacoes(docs);
+    });
+
+    const unsubItens = onSnapshot(query(collection(db, 'itensEstoque')), (querySnapshot) => {
+      const docs: ItemEstoque[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as ItemEstoque));
+      setItensEstoque(docs);
+    });
+
+    const unsubMovimentacoes = onSnapshot(query(collection(db, 'movimentacoesEstoque')), (querySnapshot) => {
+      const docs: MovimentacaoEstoque[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as MovimentacaoEstoque));
+      setMovimentacoesEstoque(docs);
+    });
 
     setLoaded(true);
+
+    // Initial Migration Script Option:
+    // If the database is completely empty on first load, maybe trigger migration or show a UI banner?
+    // We will leave the migration logic strictly isolated via an explicit file/action.
+
+    return () => {
+      unsubEmpresas();
+      unsubFuncionarios();
+      unsubPonto();
+      unsubTransacoes();
+      unsubNotas();
+      unsubTarefas();
+      unsubAnotacoes();
+      unsubItens();
+      unsubMovimentacoes();
+    };
   }, []);
 
-  // Save to localStorage on changes
+  // Backup Diário Automático
   useEffect(() => {
-    if (loaded) saveToStorage('empresas', empresas);
-  }, [empresas, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('funcionarios', funcionarios);
-  }, [funcionarios, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('registrosPonto', registrosPonto);
-  }, [registrosPonto, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('transacoes', transacoes);
-  }, [transacoes, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('notas', notas);
-  }, [notas, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('tarefas', tarefas);
-  }, [tarefas, loaded]);
-  useEffect(() => {
-    if (loaded) saveToStorage('anotacoes', anotacoes);
-  }, [anotacoes, loaded]);
+    if (!loaded) return;
+
+    // Apenas fazemos backup se já tiver dados em memória local para evitar baixar Firebase vazio nos primeiros millissecs
+    if (empresas.length === 0 && funcionarios.length === 0) return;
+
+    const today = new Date().toISOString().split('T')[0];
+    const lastBackup = loadFromStorage('lastBackupDate', '');
+
+    if (lastBackup !== today) {
+      const allData = {
+        empresas,
+        funcionarios,
+        registrosPonto,
+        transacoes,
+        notas,
+        tarefas,
+        anotacoes,
+        itensEstoque,
+        movimentacoesEstoque,
+        dataBackup: new Date().toISOString()
+      };
+
+      try {
+        const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute('href', url);
+        downloadAnchorNode.setAttribute('download', `backup_app_gerenciamento_${today}.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        URL.revokeObjectURL(url);
+
+        saveToStorage('lastBackupDate', today);
+      } catch (error) {
+        console.error("Erro ao gerar backup diário", error);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loaded, empresas.length, funcionarios.length]);
 
   // ---- Empresas ----
-  const addEmpresa = useCallback((e: Omit<Empresa, 'id' | 'criadoEm'>) => {
-    setEmpresas(prev => [...prev, { ...e, id: generateId(), criadoEm: new Date().toISOString() }]);
-  }, []);
+  const addEmpresa = async (e: Omit<Empresa, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'empresas'), {
+      ...e,
+      criadoEm: new Date().toISOString()
+    });
+  };
 
-  const updateEmpresa = useCallback((id: string, data: Partial<Empresa>) => {
-    setEmpresas(prev => prev.map(e => e.id === id ? { ...e, ...data } : e));
-  }, []);
+  const updateEmpresa = async (id: string, data: Partial<Empresa>) => {
+    await updateDoc(doc(db, 'empresas', id), data);
+  };
 
-  const deleteEmpresa = useCallback((id: string) => {
-    setEmpresas(prev => prev.filter(e => e.id !== id));
-  }, []);
+  const deleteEmpresa = async (id: string) => {
+    await deleteDoc(doc(db, 'empresas', id));
+  };
 
   // ---- Funcionários ----
-  const addFuncionario = useCallback((f: Omit<Funcionario, 'id' | 'criadoEm'>) => {
-    setFuncionarios(prev => [...prev, { ...f, id: generateId(), criadoEm: new Date().toISOString() }]);
-  }, []);
+  const addFuncionario = async (f: Omit<Funcionario, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'funcionarios'), {
+      ...f,
+      criadoEm: new Date().toISOString()
+    });
+  };
 
-  const updateFuncionario = useCallback((id: string, data: Partial<Funcionario>) => {
-    setFuncionarios(prev => prev.map(f => f.id === id ? { ...f, ...data } : f));
-  }, []);
+  const updateFuncionario = async (id: string, data: Partial<Funcionario>) => {
+    await updateDoc(doc(db, 'funcionarios', id), data);
+  };
 
-  const deleteFuncionario = useCallback((id: string) => {
-    setFuncionarios(prev => prev.filter(f => f.id !== id));
-  }, []);
+  const deleteFuncionario = async (id: string) => {
+    await deleteDoc(doc(db, 'funcionarios', id));
+  };
 
   // ---- Ponto ----
-  const addRegistroPonto = useCallback((r: Omit<RegistroPonto, 'id' | 'horasTrabalhadas'>) => {
+  const addRegistroPonto = async (r: Omit<RegistroPonto, 'id' | 'horasTrabalhadas'>) => {
     const horasTrabalhadas = calcularHoras(r.entrada, r.saida);
-    setRegistrosPonto(prev => [...prev, { ...r, id: generateId(), horasTrabalhadas }]);
-  }, []);
+    await addDoc(collection(db, 'registrosPonto'), {
+      ...r,
+      horasTrabalhadas
+    });
+  };
 
-  const deleteRegistroPonto = useCallback((id: string) => {
-    setRegistrosPonto(prev => prev.filter(r => r.id !== id));
-  }, []);
+  const deleteRegistroPonto = async (id: string) => {
+    await deleteDoc(doc(db, 'registrosPonto', id));
+  };
 
   // ---- Financeiro ----
-  const addTransacao = useCallback((t: Omit<Transacao, 'id'>) => {
-    setTransacoes(prev => [...prev, { ...t, id: generateId() }]);
-  }, []);
+  // Adding transacao is an independent action or a side effect. Usually Firebase side effects can be executed async side-by-side
+  const addTransacao = async (t: Omit<Transacao, 'id'>) => {
+    await addDoc(collection(db, 'transacoes'), t);
+  };
 
-  const deleteTransacao = useCallback((id: string) => {
-    setTransacoes(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const deleteTransacao = async (id: string) => {
+    await deleteDoc(doc(db, 'transacoes', id));
+  };
 
   // ---- Faturamento ----
-  const addNota = useCallback((n: Omit<NotaFaturamento, 'id' | 'criadoEm'>) => {
-    setNotas(prev => [...prev, { ...n, id: generateId(), criadoEm: new Date().toISOString() }]);
-  }, []);
+  const addNota = async (n: Omit<NotaFaturamento, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'notas'), {
+      ...n,
+      criadoEm: new Date().toISOString()
+    });
+  };
 
-  const updateNotaStatus = useCallback((id: string, status: 'pendente' | 'pago') => {
+  const updateNotaStatus = async (id: string, status: 'pendente' | 'pago') => {
     const nota = notas.find(n => n.id === id);
     if (!nota || nota.status === status) return;
 
+    // Handle financial side effects manually
     if (status === 'pago') {
-      // Create financial entry when marking as paid
       const nomes = nota.itens?.map(i => i.funcionarioNome).join(', ') || 'Nota';
-      const transacaoId = `nota-${id}`;
-      setTransacoes(t => {
-        if (t.some(tr => tr.id === transacaoId)) return t;
-        return [...t, {
-          id: transacaoId,
+      const transacaoRef = 'nota-' + id;
+
+      const exists = transacoes.some(tr => tr.id === transacaoRef);
+      if (!exists) {
+        // Technically this ID override logic via addDoc does NOT apply IDs directly. Usually we'd specify setDoc. 
+        // For standardising, let's keep it clean: adding a transaction.
+        await addDoc(collection(db, 'transacoes'), {
+          idReferencia: transacaoRef, // Use internal ID to not override Firebase AutoID
           data: new Date().toISOString().split('T')[0],
           descricao: `Nota de Honorários: ${nomes}`,
           tipo: 'entrada',
           valor: nota.totalValor,
           categoria: 'Faturamento',
-        }];
-      });
+        });
+      }
     } else if (status === 'pendente') {
-      // Remove financial entry when reverting to pending
-      const transacaoId = `nota-${id}`;
-      setTransacoes(t => t.filter(tr => tr.id !== transacaoId));
+      // Logic expects to remove the specific transaction if reverting to pending. 
+      // We search via idReferencia:
+      // In a real application, consider a cloud function or avoiding removing paid log.
+      const transacaoToRemove = transacoes.find(tr => (tr as any)?.idReferencia === `nota-${id}` || tr.id === `nota-${id}`);
+      if (transacaoToRemove) {
+        await deleteDoc(doc(db, 'transacoes', transacaoToRemove.id));
+      }
     }
 
-    setNotas(prev => prev.map(n => n.id === id ? { ...n, status } : n));
-  }, [notas]);
+    // Update status:
+    await updateDoc(doc(db, 'notas', id), { status });
+  };
 
-  const deleteNota = useCallback((id: string) => {
-    setNotas(prev => prev.filter(n => n.id !== id));
-  }, []);
+  const deleteNota = async (id: string) => {
+    await deleteDoc(doc(db, 'notas', id));
+  };
 
   // ---- Agenda ----
-  const addTarefa = useCallback((t: Omit<Tarefa, 'id' | 'criadoEm'>) => {
-    setTarefas(prev => [...prev, { ...t, id: generateId(), criadoEm: new Date().toISOString() }]);
-  }, []);
+  const addTarefa = async (t: Omit<Tarefa, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'tarefas'), {
+      ...t,
+      criadoEm: new Date().toISOString()
+    });
+  };
 
-  const updateTarefa = useCallback((id: string, data: Partial<Tarefa>) => {
-    setTarefas(prev => prev.map(t => t.id === id ? { ...t, ...data } : t));
-  }, []);
+  const updateTarefa = async (id: string, data: Partial<Tarefa>) => {
+    await updateDoc(doc(db, 'tarefas', id), data);
+  };
 
-  const deleteTarefa = useCallback((id: string) => {
-    setTarefas(prev => prev.filter(t => t.id !== id));
-  }, []);
+  const deleteTarefa = async (id: string) => {
+    await deleteDoc(doc(db, 'tarefas', id));
+  };
 
   // ---- Bloco de Notas Livre ----
-  const addAnotacao = useCallback((a: Omit<AnotacaoLivre, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
+  const addAnotacao = async (a: Omit<AnotacaoLivre, 'id' | 'criadoEm' | 'atualizadoEm'>) => {
     const now = new Date().toISOString();
-    setAnotacoes(prev => [{ ...a, id: generateId(), criadoEm: now, atualizadoEm: now }, ...prev]);
-  }, []);
+    await addDoc(collection(db, 'anotacoes'), {
+      ...a,
+      criadoEm: now,
+      atualizadoEm: now
+    });
+  };
 
-  const updateAnotacao = useCallback((id: string, data: Partial<AnotacaoLivre>) => {
-    setAnotacoes(prev => prev.map(a => a.id === id ? { ...a, ...data, atualizadoEm: new Date().toISOString() } : a));
-  }, []);
+  const updateAnotacao = async (id: string, data: Partial<AnotacaoLivre>) => {
+    await updateDoc(doc(db, 'anotacoes', id), {
+      ...data,
+      atualizadoEm: new Date().toISOString()
+    });
+  };
 
-  const deleteAnotacao = useCallback((id: string) => {
-    setAnotacoes(prev => prev.filter(a => a.id !== id));
-  }, []);
+  const deleteAnotacao = async (id: string) => {
+    await deleteDoc(doc(db, 'anotacoes', id));
+  };
+
+  // ---- Almoxarifado ----
+  const addItemEstoque = async (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => {
+    await addDoc(collection(db, 'itensEstoque'), {
+      ...i,
+      quantidade: 0,
+      criadoEm: new Date().toISOString()
+    });
+  };
+
+  const updateItemEstoque = async (id: string, data: Partial<ItemEstoque>) => {
+    await updateDoc(doc(db, 'itensEstoque', id), data);
+  };
+
+  const deleteItemEstoque = async (id: string) => {
+    await deleteDoc(doc(db, 'itensEstoque', id));
+  };
+
+  const registrarMovimentacaoEstoque = async (m: Omit<MovimentacaoEstoque, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'movimentacoesEstoque'), {
+      ...m,
+      criadoEm: new Date().toISOString()
+    });
+
+    const item = itensEstoque.find(i => i.id === m.itemId);
+    if (!item) return;
+
+    let novaQtd = item.quantidade;
+    if (m.tipo === 'entrada' || m.tipo === 'devolucao') {
+      novaQtd += m.quantidade;
+    } else if (m.tipo === 'saida') {
+      novaQtd -= m.quantidade;
+    }
+
+    await updateDoc(doc(db, 'itensEstoque', m.itemId), {
+      quantidade: Math.max(0, novaQtd)
+    });
+  };
 
   return (
     <DataContext.Provider value={{
@@ -384,6 +524,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       notas, addNota, updateNotaStatus, deleteNota,
       tarefas, addTarefa, updateTarefa, deleteTarefa,
       anotacoes, addAnotacao, updateAnotacao, deleteAnotacao,
+      itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque,
+      movimentacoesEstoque, registrarMovimentacaoEstoque,
+      isMigrationLoading
     }}>
       {children}
     </DataContext.Provider>
@@ -395,3 +538,4 @@ export function useData(): DataContextType {
   if (!context) throw new Error('useData must be used within DataProvider');
   return context;
 }
+

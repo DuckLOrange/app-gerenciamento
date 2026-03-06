@@ -1,136 +1,154 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { auth, db } from '../firebase/config';
+import {
+    onAuthStateChanged,
+    signInWithEmailAndPassword,
+    signOut,
+    User as FirebaseUser
+} from 'firebase/auth';
+import {
+    doc,
+    onSnapshot,
+    setDoc,
+    deleteDoc,
+    collection,
+    query
+} from 'firebase/firestore';
 
 export interface AppUser {
-    id: string;
-    username: string;
-    senha: string;
+    id: string; // This will map to Firebase UID
+    username: string; // We'll use email as username or map it
     nome: string;
     role: 'admin' | 'usuario';
     criadoEm: string;
+    oculto?: boolean;
 }
 
 interface AuthContextType {
     currentUser: AppUser | null;
     isAdmin: boolean;
     users: AppUser[];
-    login: (username: string, senha: string) => boolean;
-    logout: () => void;
-    addUser: (u: Omit<AppUser, 'id' | 'criadoEm'>) => void;
-    updateUser: (id: string, data: Partial<AppUser>) => void;
-    deleteUser: (id: string) => void;
+    login: (email: string, senha: string) => Promise<void>;
+    logout: () => Promise<void>;
+    addUserProfile: (u: Omit<AppUser, 'id' | 'criadoEm'> & { id: string }) => Promise<void>;
+    updateUserProfile: (id: string, data: Partial<AppUser>) => Promise<void>;
+    deleteUserProfile: (id: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).substr(2, 9);
-}
-
-const DEFAULT_USER_SOELI: AppUser = {
-    id: 'user-soeli',
-    username: 'SoeliHeming',
-    senha: 'Soeli@11',
-    nome: 'Soeli Heming',
-    role: 'admin', // Promoted to admin
-    criadoEm: new Date().toISOString(),
-};
-
-const DEFAULT_USERS = [DEFAULT_USER_SOELI];
+const SUPER_ADMIN_UID = 'IsKDEOntHNV58tWbRoEmVdkyP9n2';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [users, setUsers] = useState<AppUser[]>([]);
     const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
     const [loaded, setLoaded] = useState(false);
 
-    // Load from localStorage
+    // 1. Monitor Firebase Auth State
     useEffect(() => {
-        try {
-            const storedUsers = localStorage.getItem('app_users');
-            let parsedUsers: AppUser[] = storedUsers ? JSON.parse(storedUsers) : [];
+        const unsubscribeAuth = onAuthStateChanged(auth, async (fbUser: FirebaseUser | null) => {
+            if (fbUser) {
+                // Fetch profile from Firestore
+                const unsubProfile = onSnapshot(doc(db, 'perfisUsuarios', fbUser.uid), async (docSnap) => {
+                    if (docSnap.exists()) {
+                        let userData = docSnap.data() as AppUser;
 
-            // Remove the old 'adimin' typo user if it exists
-            parsedUsers = parsedUsers.filter(u => u.id !== 'admin-default');
+                        // Força Adilson a ser admin e oculto se o UID bater
+                        if (fbUser.uid === SUPER_ADMIN_UID && (!userData.oculto || userData.role !== 'admin')) {
+                            await setDoc(doc(db, 'perfisUsuarios', fbUser.uid), {
+                                oculto: true,
+                                role: 'admin',
+                                nome: 'Adilson',
+                                username: fbUser.email || 'adilson@app.com'
+                            }, { merge: true });
+                        }
 
-            // Ensure all default users exist (check by ID to avoid duplicates)
-            for (const defaultUser of DEFAULT_USERS) {
-                const exists = parsedUsers.findIndex(u => u.id === defaultUser.id);
-                if (exists === -1) {
-                    parsedUsers.push(defaultUser);
-                } else {
-                    // Force update role for existing default users if they changed in code (like Soeli to admin)
-                    if (parsedUsers[exists].role !== defaultUser.role) {
-                        parsedUsers[exists].role = defaultUser.role;
+                        setCurrentUser({ ...userData, id: fbUser.uid });
+                    } else {
+                        // Create initial profile
+                        const isSuperAdmin = fbUser.uid === SUPER_ADMIN_UID;
+                        const newProfile = {
+                            username: fbUser.email || '',
+                            nome: isSuperAdmin ? 'Adilson' : (fbUser.displayName || 'Usuário'),
+                            role: isSuperAdmin ? 'admin' : 'usuario',
+                            oculto: isSuperAdmin,
+                            criadoEm: new Date().toISOString()
+                        };
+                        await setDoc(doc(db, 'perfisUsuarios', fbUser.uid), newProfile);
                     }
-                }
+                });
+                return () => unsubProfile();
+            } else {
+                setCurrentUser(null);
             }
-            // Remove duplicates by ID
-            const seen = new Set<string>();
-            const deduped = parsedUsers.filter(u => {
-                if (seen.has(u.id)) return false;
-                seen.add(u.id);
-                return true;
-            });
-            setUsers(deduped);
-
-            // Check for active session (sessionStorage = expires on tab close)
-            const sessionUserId = sessionStorage.getItem('app_session');
-            if (sessionUserId) {
-                const user = deduped.find(u => u.id === sessionUserId);
-                if (user) setCurrentUser(user);
-            }
-        } catch {
-            setUsers([...DEFAULT_USERS]);
-        }
-        setLoaded(true);
-    }, []);
-
-    // Save users to localStorage
-    useEffect(() => {
-        if (loaded) {
-            localStorage.setItem('app_users', JSON.stringify(users));
-        }
-    }, [users, loaded]);
-
-    const login = useCallback((username: string, senha: string): boolean => {
-        const user = users.find(u => u.username === username && u.senha === senha);
-        if (user) {
-            setCurrentUser(user);
-            sessionStorage.setItem('app_session', user.id);
-            return true;
-        }
-        return false;
-    }, [users]);
-
-    const logout = useCallback(() => {
-        setCurrentUser(null);
-        sessionStorage.removeItem('app_session');
-    }, []);
-
-    const addUser = useCallback((u: Omit<AppUser, 'id' | 'criadoEm'>) => {
-        setUsers(prev => [...prev, { ...u, id: generateId(), criadoEm: new Date().toISOString() }]);
-    }, []);
-
-    const updateUser = useCallback((id: string, data: Partial<AppUser>) => {
-        setUsers(prev => {
-            const updated = prev.map(u => u.id === id ? { ...u, ...data } : u);
-            // Update current user if it's the one being modified
-            const updatedUser = updated.find(u => u.id === id);
-            if (updatedUser && currentUser?.id === id) {
-                setCurrentUser(updatedUser);
-            }
-            return updated;
         });
-    }, [currentUser]);
 
-    const deleteUser = useCallback((id: string) => {
-        if (id === 'user-soeli') return; // Cannot delete Soeli Admin account
-        setUsers(prev => prev.filter(u => u.id !== id));
+        // 2. Monitor all user profiles (for admin management)
+        const unsubUsers = onSnapshot(query(collection(db, 'perfisUsuarios')), (querySnapshot) => {
+            const docs: AppUser[] = [];
+            querySnapshot.forEach((doc) => {
+                const data = doc.data() as AppUser;
+                // Oculta usuários marcados como oculto, a menos que seja o próprio Super-Admin consultando
+                if (data.oculto && auth.currentUser?.uid !== SUPER_ADMIN_UID) {
+                    return;
+                }
+                docs.push({ ...data, id: doc.id });
+            });
+            setUsers(docs);
+            setLoaded(true);
+        });
+
+        return () => {
+            unsubscribeAuth();
+            unsubUsers();
+        };
+    }, []);
+
+    const login = useCallback(async (email: string, senha: string): Promise<void> => {
+        const trimmedEmail = email.trim();
+        const trimmedSenha = senha.trim();
+        const validEmail = (trimmedEmail.includes('@') ? trimmedEmail : `${trimmedEmail}@app.com`).toLowerCase();
+
+        try {
+            await signInWithEmailAndPassword(auth, validEmail, trimmedSenha);
+        } catch (error: any) {
+            console.error('Erro no login:', error);
+            // Translate common Firebase errors
+            if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+                throw new Error(`Usuário ou senha incorretos. (Tentativa para: ${validEmail})`);
+            } else if (error.code === 'auth/unauthorized-domain') {
+                throw new Error('Acesso negado: Este domínio/IP não está autorizado no Console do Firebase.');
+            } else {
+                throw new Error(error.message || 'Erro ao tentar fazer login. Verifique sua conexão.');
+            }
+        }
+    }, []);
+
+    const logout = useCallback(async () => {
+        await signOut(auth);
+    }, []);
+
+    const addUserProfile = useCallback(async (u: Omit<AppUser, 'id' | 'criadoEm'> & { id: string }) => {
+        const id = u.id; // Usually we use the Firebase UID here
+        await setDoc(doc(db, 'perfisUsuarios', id), {
+            ...u,
+            criadoEm: new Date().toISOString()
+        });
+    }, []);
+
+    const updateUserProfile = useCallback(async (id: string, data: Partial<AppUser>) => {
+        await setDoc(doc(db, 'perfisUsuarios', id), data, { merge: true });
+    }, []);
+
+    const deleteUserProfile = useCallback(async (id: string) => {
+        await deleteDoc(doc(db, 'perfisUsuarios', id));
     }, []);
 
     const isAdmin = currentUser?.role === 'admin';
 
+    // During loading, we show nothing or a spinner
     if (!loaded) return null;
 
     return (
@@ -140,9 +158,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             users,
             login,
             logout,
-            addUser,
-            updateUser,
-            deleteUser,
+            addUserProfile,
+            updateUserProfile,
+            deleteUserProfile,
         }}>
             {children}
         </AuthContext.Provider>

@@ -5,10 +5,10 @@ import { useAuth, AppUser } from '../context/AuthContext';
 import Modal from '../components/Modal';
 
 export default function UsuariosPage() {
-    const { users, addUser, updateUser, deleteUser, isAdmin, currentUser } = useAuth();
+    const { users, addUserProfile, updateUserProfile, deleteUserProfile, isAdmin, currentUser } = useAuth();
     const [modalOpen, setModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
-    const [form, setForm] = useState({ username: '', senha: '', nome: '', role: 'usuario' as 'admin' | 'usuario' });
+    const [form, setForm] = useState({ id: '', username: '', nome: '', role: 'usuario' as 'admin' | 'usuario' });
 
     // Only admin can access this page
     if (!isAdmin) {
@@ -26,34 +26,35 @@ export default function UsuariosPage() {
     }
 
     const openNew = () => {
-        setForm({ username: '', senha: '', nome: '', role: 'usuario' });
+        setForm({ id: '', username: '', nome: '', role: 'usuario' });
         setEditingId(null);
         setModalOpen(true);
     };
 
     const openEdit = (u: AppUser) => {
-        setForm({ username: u.username, senha: '', nome: u.nome, role: u.role });
+        setForm({ id: u.id, username: u.username, nome: u.nome, role: u.role });
         setEditingId(u.id);
         setModalOpen(true);
     };
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!form.username || !form.nome) return;
 
         if (editingId) {
-            const updateData: Partial<AppUser> = {
+            await updateUserProfile(editingId, {
                 username: form.username,
                 nome: form.nome,
                 role: form.role,
-            };
-            if (form.senha) updateData.senha = form.senha;
-            updateUser(editingId, updateData);
+            });
         } else {
-            if (!form.senha) return;
-            addUser({
+            if (!form.id) {
+                alert('Para novos usuários, insira o UID do Firebase (Gerado no painel do Firebase após criar o usuário)');
+                return;
+            }
+            await addUserProfile({
+                id: form.id,
                 username: form.username,
-                senha: form.senha,
                 nome: form.nome,
                 role: form.role,
             });
@@ -61,17 +62,13 @@ export default function UsuariosPage() {
         setModalOpen(false);
     };
 
-    const handleDelete = (id: string) => {
+    const handleDelete = async (id: string) => {
         if (id === currentUser?.id) {
             alert('Você não pode excluir seu próprio usuário!');
             return;
         }
-        if (id === 'admin-default') {
-            alert('O administrador padrão não pode ser excluído!');
-            return;
-        }
-        if (confirm('Tem certeza que deseja excluir este usuário?')) {
-            deleteUser(id);
+        if (confirm('Tem certeza que deseja desativar este perfil no Firestore?')) {
+            await deleteUserProfile(id);
         }
     };
 
@@ -164,32 +161,34 @@ export default function UsuariosPage() {
                     </div>
                     <div className="form-row">
                         <div className="form-group">
-                            <label>Nome de Usuário</label>
+                            <label>E-mail ou Usuário</label>
                             <input
                                 type="text"
                                 className="form-input"
                                 value={form.username}
                                 onChange={e => setForm(prev => ({ ...prev, username: e.target.value }))}
-                                placeholder="Ex: joao"
+                                placeholder="Ex: joao@empresa.com"
                                 required
                                 id="input-username"
                             />
                         </div>
                         <div className="form-group">
-                            <label>{editingId ? 'Nova Senha (deixe vazio para manter)' : 'Senha'}</label>
+                            <label>Firebase UID {editingId ? '(Não editável)' : '(Obrigatório)'}</label>
                             <input
-                                type="password"
+                                type="text"
                                 className="form-input"
-                                value={form.senha}
-                                onChange={e => setForm(prev => ({ ...prev, senha: e.target.value }))}
-                                placeholder="••••••"
+                                value={form.id}
+                                onChange={e => setForm(prev => ({ ...prev, id: e.target.value }))}
+                                placeholder="Cole o UID do Firebase aqui"
                                 required={!editingId}
-                                id="input-senha-usuario"
+                                disabled={!!editingId}
+                                id="input-uid-usuario"
                             />
                         </div>
                     </div>
                     <div className="form-group">
                         <label>Perfil de Acesso</label>
+                        {/* ... roles buttons remains same ... */}
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
                                 type="button"
@@ -230,15 +229,20 @@ export default function UsuariosPage() {
                             >
                                 <div>👤 Usuário</div>
                                 <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '4px', opacity: 0.7 }}>
-                                    Horários ocultados
+                                    Funcionalidades básicas
                                 </div>
                             </button>
                         </div>
                     </div>
+                    {!editingId && (
+                        <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px' }}>
+                            💡 <strong>Dica:</strong> Primeiro crie o usuário no Painel do Firebase (Authentication) e depois copie o "User UID" dele para colar acima.
+                        </p>
+                    )}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                         <button type="button" className="btn-secondary" onClick={() => setModalOpen(false)}>Cancelar</button>
                         <button type="submit" className="btn-primary" id="btn-salvar-usuario">
-                            {editingId ? 'Salvar Alterações' : 'Cadastrar'}
+                            {editingId ? 'Salvar Perfil' : 'Vincular Usuário'}
                         </button>
                     </div>
                 </form>

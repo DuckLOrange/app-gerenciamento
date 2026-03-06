@@ -10,18 +10,18 @@ export default function LoginScreen() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setLoading(true);
 
-        setTimeout(() => {
-            const success = login(username, senha);
-            if (!success) {
-                setError('Usuário ou senha incorretos');
-            }
+        try {
+            await login(username, senha);
+        } catch (err: any) {
+            setError(err.message || 'Erro ao tentar fazer login. Verifique sua conexão.');
+        } finally {
             setLoading(false);
-        }, 400);
+        }
     };
 
     return (
@@ -144,6 +144,7 @@ export default function LoginScreen() {
                                 required
                                 autoFocus
                                 id="login-username"
+                                autoComplete="off"
                             />
                         </div>
                     </div>
@@ -167,6 +168,7 @@ export default function LoginScreen() {
                                 placeholder="Digite sua senha"
                                 required
                                 id="login-password"
+                                autoComplete="current-password"
                             />
                         </div>
                     </div>

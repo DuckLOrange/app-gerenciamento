@@ -7,14 +7,18 @@ const pageTitles: Record<string, string> = {
     '/': 'Dashboard',
     '/funcionarios': 'Funcionários',
     '/empresas': 'Empresas',
-    '/ponto': 'Cartão Ponto',
+    '/ponto': 'Gestão de Horas',
     '/agenda': 'Agenda & Notas',
     '/financeiro': 'Financeiro',
     '/faturamento': 'Faturamento',
     '/usuarios': 'Usuários',
 };
 
-export default function Header() {
+interface HeaderProps {
+    onToggleSidebar?: () => void;
+}
+
+export default function Header({ onToggleSidebar }: HeaderProps) {
     const pathname = usePathname();
     const [currentDate, setCurrentDate] = useState('');
 
@@ -44,26 +48,52 @@ export default function Header() {
             gap: '16px',
             flexWrap: 'wrap',
         }}>
-            <div>
-                <h1 style={{
-                    fontSize: '28px',
-                    fontWeight: 800,
-                    letterSpacing: '-0.02em',
-                    background: 'linear-gradient(135deg, var(--foreground), var(--text-muted))',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    margin: 0,
-                }}>
-                    {title}
-                </h1>
-                <p style={{
-                    fontSize: '13px',
-                    color: 'var(--text-muted)',
-                    marginTop: '4px',
-                    textTransform: 'capitalize',
-                }}>
-                    {currentDate}
-                </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Mobile Menu Toggle */}
+                <button
+                    onClick={onToggleSidebar}
+                    style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid var(--card-border)',
+                        borderRadius: '10px',
+                        width: '40px',
+                        height: '40px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'var(--foreground)',
+                        cursor: 'pointer'
+                    }}
+                    className="md:hidden"
+                    title="Menu"
+                >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <div>
+                    <h1 style={{
+                        fontSize: '28px',
+                        fontWeight: 800,
+                        letterSpacing: '-0.02em',
+                        background: 'linear-gradient(135deg, var(--foreground), var(--text-muted))',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        margin: 0,
+                    }}>
+                        {title}
+                    </h1>
+                    <p style={{
+                        fontSize: '13px',
+                        color: 'var(--text-muted)',
+                        marginTop: '4px',
+                        textTransform: 'capitalize',
+                    }}>
+                        {currentDate}
+                    </p>
+                </div>
             </div>
 
             <div style={{ position: 'relative' }}>

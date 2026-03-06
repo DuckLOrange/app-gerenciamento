@@ -3,9 +3,10 @@
 import { useData } from './context/DataContext';
 import { useAuth } from './context/AuthContext';
 import { useMemo } from 'react';
+import { FirebaseMigration } from './components/FirebaseMigration';
 
 export default function Dashboard() {
-  const { funcionarios, registrosPonto, transacoes, notas } = useData();
+  const { empresas, funcionarios, registrosPonto, transacoes, notas } = useData();
   const { isAdmin } = useAuth();
 
   const stats = useMemo(() => {
@@ -88,8 +89,11 @@ export default function Dashboard() {
     return items.sort((a, b) => b.data.localeCompare(a.data)).slice(0, 8);
   }, [registrosPonto, transacoes, notas, funcionarios]);
 
+  const showMigration = empresas.length === 0 && funcionarios.length === 0;
+
   return (
     <div>
+      {showMigration && <FirebaseMigration />}
       {/* Stat Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '20px', marginBottom: '32px' }}>
         <div className="glass-card stat-card purple animate-fade-in" style={{ padding: '24px' }} id="stat-funcionarios">

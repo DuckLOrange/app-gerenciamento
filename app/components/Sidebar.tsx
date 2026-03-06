@@ -4,7 +4,12 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
 
-export default function Sidebar() {
+interface SidebarProps {
+    isOpen?: boolean;
+    onClose?: () => void;
+}
+
+export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const { currentUser, isAdmin, logout } = useAuth();
 
@@ -37,7 +42,7 @@ export default function Sidebar() {
         },
         {
             href: '/ponto',
-            label: 'Cartão Ponto',
+            label: 'Gestão de Horas',
             adminOnly: false,
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -96,6 +101,18 @@ export default function Sidebar() {
             ),
         },
         {
+            href: '/almoxarifado',
+            label: 'Almoxarifado',
+            adminOnly: false,
+            icon: (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                    <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                </svg>
+            ),
+        },
+        {
             href: '/usuarios',
             label: 'Usuários',
             adminOnly: true,
@@ -110,7 +127,42 @@ export default function Sidebar() {
     const visibleItems = menuItems.filter(item => !item.adminOnly || isAdmin);
 
     return (
-        <aside className="sidebar" id="sidebar">
+        <aside
+            className="sidebar"
+            id="sidebar"
+            style={{
+                transform: isOpen ? 'translateX(0)' : undefined,
+                visibility: isOpen ? 'visible' : undefined,
+                zIndex: 40
+            }}
+        >
+            {/* Close Button (Mobile Only) */}
+            <button
+                onClick={onClose}
+                style={{
+                    position: 'absolute',
+                    top: '16px',
+                    right: '16px',
+                    background: 'rgba(255,255,255,0.06)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    zIndex: 50
+                }}
+                className="md:hidden"
+            >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
             {/* Logo */}
             <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--card-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -122,7 +174,7 @@ export default function Sidebar() {
                             height: '40px',
                             borderRadius: '12px',
                             objectFit: 'cover',
-                            background: 'white' // opcional, caso o png seja transparente e precise de fundo
+                            background: 'white'
                         }}
                     />
                     <div>
@@ -149,6 +201,7 @@ export default function Sidebar() {
                             href={item.href}
                             className={`sidebar-link ${isActive ? 'active' : ''}`}
                             id={`nav-${item.href.replace('/', '') || 'dashboard'}`}
+                            onClick={onClose}
                         >
                             {item.icon}
                             {item.label}
