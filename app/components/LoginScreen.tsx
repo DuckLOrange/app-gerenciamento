@@ -17,8 +17,8 @@ export default function LoginScreen() {
 
         try {
             await login(username, senha);
-        } catch (err: any) {
-            setError(err.message || 'Erro ao tentar fazer login. Verifique sua conexão.');
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : 'Erro ao tentar fazer login. Verifique sua conexão.');
         } finally {
             setLoading(false);
         }

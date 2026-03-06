@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from 'react';
 import { db } from '../firebase/config';
-import { collection, writeBatch, doc } from 'firebase/firestore';
+import { writeBatch, doc } from 'firebase/firestore';
 
 export function FirebaseMigration() {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -42,6 +42,7 @@ export function FirebaseMigration() {
                 let totalRegistros = 0;
 
                 for (const colName of collectionsToMigrate) {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const items = data[colName] as any[];
                     if (items && Array.isArray(items) && items.length > 0) {
 

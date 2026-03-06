@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 // Fetch profile from Firestore
                 const unsubProfile = onSnapshot(doc(db, 'perfisUsuarios', fbUser.uid), async (docSnap) => {
                     if (docSnap.exists()) {
-                        let userData = docSnap.data() as AppUser;
+                        const userData = docSnap.data() as AppUser;
 
                         // Força Adilson a ser admin e oculto se o UID bater
                         if (fbUser.uid === SUPER_ADMIN_UID && (!userData.oculto || userData.role !== 'admin')) {
@@ -113,15 +113,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         try {
             await signInWithEmailAndPassword(auth, validEmail, trimmedSenha);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error('Erro no login:', error);
+            const err = error as Error & { code?: string };
             // Translate common Firebase errors
-            if (error.code === 'auth/wrong-password' || error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+            if (err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
                 throw new Error(`Usuário ou senha incorretos. (Tentativa para: ${validEmail})`);
-            } else if (error.code === 'auth/unauthorized-domain') {
+            } else if (err.code === 'auth/unauthorized-domain') {
                 throw new Error('Acesso negado: Este domínio/IP não está autorizado no Console do Firebase.');
             } else {
-                throw new Error(error.message || 'Erro ao tentar fazer login. Verifique sua conexão.');
+                throw new Error(err.message || 'Erro ao tentar fazer login. Verifique sua conexão.');
             }
         }
     }, []);

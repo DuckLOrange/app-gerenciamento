@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { useData, ItemEstoque, MovimentacaoEstoque } from '../context/DataContext';
+import { useData, ItemEstoque } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 
@@ -398,7 +398,7 @@ export default function AlmoxarifadoPage() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Categoria</label>
-                            <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as any }))}>
+                            <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as 'EPI' | 'Ferramenta' | 'Consumível' }))}>
                                 <option value="EPI">EPI (Segurança)</option>
                                 <option value="Ferramenta">Ferramenta</option>
                                 <option value="Consumível">Material Consumível</option>

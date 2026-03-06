@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import {
   collection,
@@ -216,7 +216,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [movimentacoesEstoque, setMovimentacoesEstoque] = useState<MovimentacaoEstoque[]>([]);
 
   const [loaded, setLoaded] = useState(false);
-  const [isMigrationLoading, setIsMigrationLoading] = useState(false);
+  const [isMigrationLoading] = useState(false);
 
   // Setup Firebase Listeners
   useEffect(() => {
@@ -426,7 +426,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       // Logic expects to remove the specific transaction if reverting to pending. 
       // We search via idReferencia:
       // In a real application, consider a cloud function or avoiding removing paid log.
-      const transacaoToRemove = transacoes.find(tr => (tr as any)?.idReferencia === `nota-${id}` || tr.id === `nota-${id}`);
+      const transacaoToRemove = transacoes.find(tr => (tr as Transacao & { idReferencia?: string })?.idReferencia === `nota-${id}` || tr.id === `nota-${id}`);
       if (transacaoToRemove) {
         await deleteDoc(doc(db, 'transacoes', transacaoToRemove.id));
       }

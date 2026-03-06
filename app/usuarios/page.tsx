@@ -236,7 +236,7 @@ export default function UsuariosPage() {
                     </div>
                     {!editingId && (
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px' }}>
-                            💡 <strong>Dica:</strong> Primeiro crie o usuário no Painel do Firebase (Authentication) e depois copie o "User UID" dele para colar acima.
+                            💡 <strong>Dica:</strong> Primeiro crie o usuário no Painel do Firebase (Authentication) e depois copie o &quot;User UID&quot; dele para colar acima.
                         </p>
                     )}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
