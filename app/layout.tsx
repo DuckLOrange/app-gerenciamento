@@ -4,6 +4,7 @@ import "./globals.css";
 import { DataProvider } from "./context/DataContext";
 import { AuthProvider } from "./context/AuthContext";
 import AppShell from "./components/AppShell";
+import SWRegistration from "./components/SWRegistration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -18,6 +19,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Gestão Empresarial",
   description: "Sistema de gerenciamento empresarial - Controle de ponto, financeiro e faturamento",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
 };
 
 export default function RootLayout({
@@ -33,6 +37,7 @@ export default function RootLayout({
         <AuthProvider>
           <DataProvider>
             <AppShell>{children}</AppShell>
+            <SWRegistration />
           </DataProvider>
         </AuthProvider>
       </body>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import InstallButton from './InstallButton';
 
 export default function LoginScreen() {
     const { login } = useAuth();
@@ -207,6 +208,7 @@ export default function LoginScreen() {
                     </button>
                 </form>
             </div>
+            <InstallButton />
         </div>
     );
 }

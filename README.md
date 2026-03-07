@@ -1,5 +1,18 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Quick Setup
+
+Para facilitar a instalação, você pode usar os scripts de automação:
+
+**Windows:**
+Executar `setup.bat` no terminal ou clicar duas vezes no arquivo.
+
+**Linux/macOS:**
+```bash
+chmod +x setup.sh
+./setup.sh
+```
+
 ## Getting Started
 
 First, run the development server:
