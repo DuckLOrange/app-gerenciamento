@@ -201,47 +201,49 @@ export default function FinanceiroPage() {
                         <p style={{ fontSize: '13px' }}>Clique em &quot;Nova Transação&quot; para adicionar</p>
                     </div>
                 ) : (
-                    <table className="data-table" id="table-financeiro">
-                        <thead>
-                            <tr>
-                                <th>Data</th>
-                                <th>Descrição</th>
-                                <th>Categoria</th>
-                                <th>Tipo</th>
-                                <th>Valor</th>
-                                <th style={{ textAlign: 'right' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {transacoesFiltradas.map((t) => (
-                                <tr key={t.id}>
-                                    <td style={{ fontWeight: 600 }}>
-                                        {new Date(t.data + 'T12:00:00').toLocaleDateString('pt-BR')}
-                                    </td>
-                                    <td>{t.descricao}</td>
-                                    <td>
-                                        <span className="badge info">{t.categoria}</span>
-                                    </td>
-                                    <td>
-                                        <span className={`badge ${t.tipo === 'entrada' ? 'success' : 'warning'}`}>
-                                            {t.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída'}
-                                        </span>
-                                    </td>
-                                    <td style={{
-                                        fontWeight: 700,
-                                        color: t.tipo === 'entrada' ? '#4ade80' : '#fbbf24',
-                                    }}>
-                                        {t.tipo === 'entrada' ? '+' : '-'}R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                    </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                        {isAdmin && (
-                                            <button className="btn-danger" onClick={() => handleDelete(t.id)}>Excluir</button>
-                                        )}
-                                    </td>
+                    <div className="table-responsive-wrapper">
+                        <table className="data-table" id="table-financeiro">
+                            <thead>
+                                <tr>
+                                    <th>Data</th>
+                                    <th>Descrição</th>
+                                    <th>Categoria</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th style={{ textAlign: 'right' }}>Ações</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {transacoesFiltradas.map((t) => (
+                                    <tr key={t.id}>
+                                        <td data-label="Data" style={{ fontWeight: 600 }}>
+                                            {new Date(t.data + 'T12:00:00').toLocaleDateString('pt-BR')}
+                                        </td>
+                                        <td data-label="Descrição">{t.descricao}</td>
+                                        <td data-label="Categoria">
+                                            <span className="badge info">{t.categoria}</span>
+                                        </td>
+                                        <td data-label="Tipo">
+                                            <span className={`badge ${t.tipo === 'entrada' ? 'success' : 'warning'}`}>
+                                                {t.tipo === 'entrada' ? '↑ Entrada' : '↓ Saída'}
+                                            </span>
+                                        </td>
+                                        <td data-label="Valor" style={{
+                                            fontWeight: 700,
+                                            color: t.tipo === 'entrada' ? '#4ade80' : '#fbbf24',
+                                        }}>
+                                            {t.tipo === 'entrada' ? '+' : '-'}R$ {t.valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        </td>
+                                        <td data-label="Ações" style={{ textAlign: 'right' }}>
+                                            {isAdmin && (
+                                                <button className="btn-danger" onClick={() => handleDelete(t.id)}>Excluir</button>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

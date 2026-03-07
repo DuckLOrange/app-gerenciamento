@@ -86,69 +86,71 @@ export default function FuncionariosPage() {
                         <p style={{ fontSize: '13px' }}>Clique em &quot;Novo Funcionário&quot; para começar</p>
                     </div>
                 ) : (
-                    <table className="data-table" id="table-funcionarios">
-                        <thead>
-                            <tr>
-                                <th>Nome</th>
-                                <th>CPF</th>
-                                <th>Empresa</th>
-                                <th>Cargo</th>
-                                <th>Valor/Hora</th>
-                                <th>Status</th>
-                                <th style={{ textAlign: 'right' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {funcionarios.map((f) => (
-                                <tr key={f.id}>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div className="avatar" style={{
-                                                background: f.status === 'ativo'
-                                                    ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-                                                    : 'rgba(100,116,139,0.3)',
-                                            }}>
-                                                {f.nome.charAt(0).toUpperCase()}
-                                            </div>
-                                            <span style={{ fontWeight: 600 }}>{f.nome}</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                                        {f.cpf || '—'}
-                                    </td>
-                                    <td>
-                                        {(() => {
-                                            const emp = empresas.find(e => e.id === f.empresaId);
-                                            return emp ? (
-                                                <span className="badge info" style={{ fontSize: '11px' }}>
-                                                    {emp.nomeFantasia || emp.razaoSocial}
-                                                </span>
-                                            ) : (
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Sem empresa</span>
-                                            );
-                                        })()}
-                                    </td>
-                                    <td>{f.cargo}</td>
-                                    <td style={{ fontWeight: 600 }}>R$ {f.valorHora.toFixed(2)}</td>
-                                    <td>
-                                        <span className={`badge ${f.status === 'ativo' ? 'success' : 'warning'}`}>
-                                            {f.status === 'ativo' ? '● Ativo' : '● Inativo'}
-                                        </span>
-                                    </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                            <button className="btn-secondary" onClick={() => openEdit(f)} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                                                Editar
-                                            </button>
-                                            <button className="btn-danger" onClick={() => handleDelete(f.id)}>
-                                                Excluir
-                                            </button>
-                                        </div>
-                                    </td>
+                    <div className="table-responsive-wrapper">
+                        <table className="data-table" id="table-funcionarios">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>CPF</th>
+                                    <th>Empresa</th>
+                                    <th>Cargo</th>
+                                    <th>Valor/Hora</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Ações</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {funcionarios.map((f) => (
+                                    <tr key={f.id}>
+                                        <td data-label="Nome">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div className="avatar" style={{
+                                                    background: f.status === 'ativo'
+                                                        ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+                                                        : 'rgba(100,116,139,0.3)',
+                                                }}>
+                                                    {f.nome.charAt(0).toUpperCase()}
+                                                </div>
+                                                <span style={{ fontWeight: 600 }}>{f.nome}</span>
+                                            </div>
+                                        </td>
+                                        <td data-label="CPF" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+                                            {f.cpf || '—'}
+                                        </td>
+                                        <td data-label="Empresa">
+                                            {(() => {
+                                                const emp = empresas.find(e => e.id === f.empresaId);
+                                                return emp ? (
+                                                    <span className="badge info" style={{ fontSize: '11px' }}>
+                                                        {emp.nomeFantasia || emp.razaoSocial}
+                                                    </span>
+                                                ) : (
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>Sem empresa</span>
+                                                );
+                                            })()}
+                                        </td>
+                                        <td data-label="Cargo">{f.cargo}</td>
+                                        <td data-label="Valor/Hora" style={{ fontWeight: 600 }}>R$ {f.valorHora.toFixed(2)}</td>
+                                        <td data-label="Status">
+                                            <span className={`badge ${f.status === 'ativo' ? 'success' : 'warning'}`}>
+                                                {f.status === 'ativo' ? '● Ativo' : '● Inativo'}
+                                            </span>
+                                        </td>
+                                        <td data-label="Ações" style={{ textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button className="btn-secondary" onClick={() => openEdit(f)} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                                                    Editar
+                                                </button>
+                                                <button className="btn-danger" onClick={() => handleDelete(f.id)}>
+                                                    Excluir
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

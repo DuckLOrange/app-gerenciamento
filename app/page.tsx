@@ -142,7 +142,7 @@ export default function Dashboard() {
       </div>
 
       {/* Chart + Recent Activity */}
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '20px' }}>
+      <div className="dashboard-grid">
         {/* Chart */}
         <div className="glass-card animate-fade-in" style={{ padding: '24px' }} id="chart-gastos">
           <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '24px', margin: '0 0 24px 0' }}>

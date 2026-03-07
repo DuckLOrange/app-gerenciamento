@@ -168,96 +168,98 @@ export default function FaturamentoPage() {
                         <p style={{ fontSize: '13px' }}>Gere notas a partir das horas do cartão ponto</p>
                     </div>
                 ) : (
-                    <table className="data-table" id="table-faturamento">
-                        <thead>
-                            <tr>
-                                <th>Empresa</th>
-                                <th>Mês Referência</th>
-                                <th>Funcionários</th>
-                                <th>Total Horas</th>
-                                <th>Valor Total</th>
-                                <th>Status</th>
-                                <th style={{ textAlign: 'right' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {notas.sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)).map((nota) => {
-                                const totalHoras = nota.itens.reduce((a, i) => a + i.totalHoras, 0);
-                                return (
-                                    <tr key={nota.id}>
-                                        <td>
-                                            {nota.empresaNome ? (
-                                                <span className="badge info" style={{ fontSize: '11px' }}>
-                                                    {nota.empresaNome}
-                                                </span>
-                                            ) : (
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>
-                                            )}
-                                        </td>
-                                        <td style={{ textTransform: 'capitalize' }}>
-                                            {formatMes(nota.mes)}
-                                        </td>
-                                        <td>
-                                            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                                                {nota.itens.map((item, idx) => (
-                                                    <span key={idx} style={{
-                                                        fontSize: '11px', background: 'rgba(99,102,241,0.1)',
-                                                        padding: '2px 8px', borderRadius: '6px', fontWeight: 600,
-                                                    }}>
-                                                        {item.funcionarioNome}
+                    <div className="table-responsive-wrapper">
+                        <table className="data-table" id="table-faturamento">
+                            <thead>
+                                <tr>
+                                    <th>Empresa</th>
+                                    <th>Mês Referência</th>
+                                    <th>Funcionários</th>
+                                    <th>Total Horas</th>
+                                    <th>Valor Total</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {notas.sort((a, b) => b.criadoEm.localeCompare(a.criadoEm)).map((nota) => {
+                                    const totalHoras = nota.itens.reduce((a, i) => a + i.totalHoras, 0);
+                                    return (
+                                        <tr key={nota.id}>
+                                            <td data-label="Empresa">
+                                                {nota.empresaNome ? (
+                                                    <span className="badge info" style={{ fontSize: '11px' }}>
+                                                        {nota.empresaNome}
                                                     </span>
-                                                ))}
-                                            </div>
-                                        </td>
-                                        <td style={{ fontWeight: 600, color: 'var(--accent-tertiary)' }}>{totalHoras.toFixed(1)}h</td>
-                                        <td style={{ fontWeight: 700, fontSize: '15px' }}>
-                                            R$ {nota.totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`badge ${nota.status === 'pago' ? 'success' : 'warning'}`}
-                                            >
-                                                {nota.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}
-                                            </span>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                                                {nota.status === 'pendente' ? (
-                                                    <button
-                                                        className="btn-primary"
-                                                        style={{ padding: '6px 14px', fontSize: '12px', background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
-                                                        onClick={() => updateNotaStatus(nota.id, 'pago')}
-                                                    >
-                                                        ✓ Confirmar Recebimento
-                                                    </button>
                                                 ) : (
+                                                    <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>—</span>
+                                                )}
+                                            </td>
+                                            <td data-label="Mês Referência" style={{ textTransform: 'capitalize' }}>
+                                                {formatMes(nota.mes)}
+                                            </td>
+                                            <td data-label="Funcionários">
+                                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                                                    {nota.itens.map((item, idx) => (
+                                                        <span key={idx} style={{
+                                                            fontSize: '11px', background: 'rgba(99,102,241,0.1)',
+                                                            padding: '2px 8px', borderRadius: '6px', fontWeight: 600,
+                                                        }}>
+                                                            {item.funcionarioNome}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </td>
+                                            <td data-label="Total Horas" style={{ fontWeight: 600, color: 'var(--accent-tertiary)' }}>{totalHoras.toFixed(1)}h</td>
+                                            <td data-label="Valor Total" style={{ fontWeight: 700, fontSize: '15px' }}>
+                                                R$ {nota.totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            </td>
+                                            <td data-label="Status">
+                                                <span
+                                                    className={`badge ${nota.status === 'pago' ? 'success' : 'warning'}`}
+                                                >
+                                                    {nota.status === 'pago' ? '✓ Pago' : '⏳ Pendente'}
+                                                </span>
+                                            </td>
+                                            <td data-label="Ações" style={{ textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                                    {nota.status === 'pendente' ? (
+                                                        <button
+                                                            className="btn-primary"
+                                                            style={{ padding: '6px 14px', fontSize: '12px', background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}
+                                                            onClick={() => updateNotaStatus(nota.id, 'pago')}
+                                                        >
+                                                            ✓ Confirmar Recebimento
+                                                        </button>
+                                                    ) : (
+                                                        <button
+                                                            className="btn-secondary"
+                                                            style={{ padding: '6px 12px', fontSize: '12px' }}
+                                                            onClick={() => updateNotaStatus(nota.id, 'pendente')}
+                                                        >
+                                                            ↩ Desfazer
+                                                        </button>
+                                                    )}
                                                     <button
                                                         className="btn-secondary"
                                                         style={{ padding: '6px 12px', fontSize: '12px' }}
-                                                        onClick={() => updateNotaStatus(nota.id, 'pendente')}
+                                                        onClick={() => setPreviewNota(nota.id)}
                                                     >
-                                                        ↩ Desfazer
+                                                        Visualizar
                                                     </button>
-                                                )}
-                                                <button
-                                                    className="btn-secondary"
-                                                    style={{ padding: '6px 12px', fontSize: '12px' }}
-                                                    onClick={() => setPreviewNota(nota.id)}
-                                                >
-                                                    Visualizar
-                                                </button>
-                                                {isAdmin && (
-                                                    <button className="btn-danger" onClick={() => handleDelete(nota.id)}>
-                                                        Excluir
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                                    {isAdmin && (
+                                                        <button className="btn-danger" onClick={() => handleDelete(nota.id)}>
+                                                            Excluir
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 
@@ -473,34 +475,36 @@ export default function FaturamentoPage() {
                             </div>
                         </div>
 
-                        <table className="data-table" style={{ marginBottom: '24px' }}>
-                            <thead>
-                                <tr>
-                                    <th>Profissional</th>
-                                    <th style={{ textAlign: 'center' }}>Horas</th>
-                                    <th style={{ textAlign: 'right' }}>Valor/h</th>
-                                    <th style={{ textAlign: 'right' }}>Subtotal</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {notaPreview.itens.map((item, idx) => (
-                                    <tr key={idx}>
-                                        <td style={{ fontWeight: 600 }}>{item.funcionarioNome}</td>
-                                        <td style={{ textAlign: 'center' }}>{item.totalHoras.toFixed(1)}h</td>
-                                        <td style={{ textAlign: 'right' }}>R$ {item.valorHora.toFixed(2)}</td>
-                                        <td style={{ textAlign: 'right', fontWeight: 700 }}>
-                                            R$ {item.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                        <div className="table-responsive-wrapper">
+                            <table className="data-table" style={{ marginBottom: '24px' }}>
+                                <thead>
+                                    <tr>
+                                        <th>Profissional</th>
+                                        <th style={{ textAlign: 'center' }}>Horas</th>
+                                        <th style={{ textAlign: 'right' }}>Valor/h</th>
+                                        <th style={{ textAlign: 'right' }}>Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {notaPreview.itens.map((item, idx) => (
+                                        <tr key={idx}>
+                                            <td style={{ fontWeight: 600 }}>{item.funcionarioNome}</td>
+                                            <td style={{ textAlign: 'center' }}>{item.totalHoras.toFixed(1)}h</td>
+                                            <td style={{ textAlign: 'right' }}>R$ {item.valorHora.toFixed(2)}</td>
+                                            <td style={{ textAlign: 'right', fontWeight: 700 }}>
+                                                R$ {item.subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                    <tr className="total-row">
+                                        <td colSpan={3} style={{ textAlign: 'right' }}>VALOR TOTAL</td>
+                                        <td style={{ textAlign: 'right', fontSize: '16px' }}>
+                                            R$ {notaPreview.totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                         </td>
                                     </tr>
-                                ))}
-                                <tr className="total-row">
-                                    <td colSpan={3} style={{ textAlign: 'right' }}>VALOR TOTAL</td>
-                                    <td style={{ textAlign: 'right', fontSize: '16px' }}>
-                                        R$ {notaPreview.totalValor.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </tbody>
+                            </table>
+                        </div>
 
                         <div style={{
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',

@@ -274,67 +274,69 @@ export default function PontoPage() {
                                 <p style={{ fontSize: '13px' }}>Clique em &quot;Registrar Ponto&quot; para adicionar</p>
                             </div>
                         ) : (
-                            <table className="data-table" id="table-ponto-diario">
-                                <thead>
-                                    <tr>
-                                        <th>Data</th>
-                                        <th>Dia</th>
-                                        <th>Funcionário</th>
-                                        <th>Entrada</th>
-                                        <th>Saída</th>
-                                        <th>Horas</th>
-                                        <th style={{ textAlign: 'right' }}>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {registrosDiarios.map((r) => {
-                                        const func = funcionarios.find(f => f.id === r.funcionarioId);
-                                        const dataObj = new Date(r.data + 'T12:00:00');
-                                        const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' });
-                                        return (
-                                            <tr key={r.id}>
-                                                <td style={{ fontWeight: 600 }}>
-                                                    {dataObj.toLocaleDateString('pt-BR')}
-                                                </td>
-                                                <td>
-                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
-                                                        {diaSemana}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div className="avatar" style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', width: '28px', height: '28px', fontSize: '11px' }}>
-                                                            {func?.nome.charAt(0).toUpperCase() || '?'}
+                            <div className="table-responsive-wrapper">
+                                <table className="data-table" id="table-ponto-diario">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Dia</th>
+                                            <th>Funcionário</th>
+                                            <th>Entrada</th>
+                                            <th>Saída</th>
+                                            <th>Horas</th>
+                                            <th style={{ textAlign: 'right' }}>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {registrosDiarios.map((r) => {
+                                            const func = funcionarios.find(f => f.id === r.funcionarioId);
+                                            const dataObj = new Date(r.data + 'T12:00:00');
+                                            const diaSemana = dataObj.toLocaleDateString('pt-BR', { weekday: 'short' });
+                                            return (
+                                                <tr key={r.id}>
+                                                    <td style={{ fontWeight: 600 }}>
+                                                        {dataObj.toLocaleDateString('pt-BR')}
+                                                    </td>
+                                                    <td>
+                                                        <span style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
+                                                            {diaSemana}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div className="avatar" style={{ background: 'linear-gradient(135deg, #06b6d4, #8b5cf6)', width: '28px', height: '28px', fontSize: '11px' }}>
+                                                                {func?.nome.charAt(0).toUpperCase() || '?'}
+                                                            </div>
+                                                            {func?.nome || 'Desconhecido'}
                                                         </div>
-                                                        {func?.nome || 'Desconhecido'}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className="badge info">{r.entrada}</span>
-                                                </td>
-                                                <td>
-                                                    <span className="badge warning">{r.saida}</span>
-                                                </td>
-                                                <td style={{ fontWeight: 700, color: 'var(--accent-tertiary)' }}>
-                                                    {r.horasTrabalhadas.toFixed(1)}h
-                                                </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    {isAdmin && (
-                                                        <button className="btn-danger" onClick={() => handleDelete(r.id)}>
-                                                            Excluir
-                                                        </button>
-                                                    )}
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                    <tr className="total-row">
-                                        <td colSpan={5} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL</td>
-                                        <td>{totalHorasDiario.toFixed(1)}h</td>
-                                        <td></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                                    </td>
+                                                    <td>
+                                                        <span className="badge info">{r.entrada}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span className="badge warning">{r.saida}</span>
+                                                    </td>
+                                                    <td style={{ fontWeight: 700, color: 'var(--accent-tertiary)' }}>
+                                                        {r.horasTrabalhadas.toFixed(1)}h
+                                                    </td>
+                                                    <td style={{ textAlign: 'right' }}>
+                                                        {isAdmin && (
+                                                            <button className="btn-danger" onClick={() => handleDelete(r.id)}>
+                                                                Excluir
+                                                            </button>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                        <tr className="total-row">
+                                            <td colSpan={5} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL</td>
+                                            <td>{totalHorasDiario.toFixed(1)}h</td>
+                                            <td></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
                 </>
@@ -373,58 +375,60 @@ export default function PontoPage() {
                                 <p style={{ fontSize: '13px' }}>Adicione registros de ponto para ver o resumo mensal</p>
                             </div>
                         ) : (
-                            <table className="data-table" id="table-ponto-mensal">
-                                <thead>
-                                    <tr>
-                                        <th>Funcionário</th>
-                                        <th>Cargo</th>
-                                        <th style={{ textAlign: 'center' }}>Dias Trabalhados</th>
-                                        <th style={{ textAlign: 'center' }}>Total Horas</th>
-                                        <th style={{ textAlign: 'center' }}>Média/Dia</th>
-                                        <th style={{ textAlign: 'right' }}>Valor/Hora</th>
-                                        <th style={{ textAlign: 'right' }}>Valor Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {resumoMensal.map((r) => (
-                                        <tr key={r.funcionarioId}>
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div className="avatar" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                                                        {r.nome.charAt(0).toUpperCase()}
+                            <div className="table-responsive-wrapper">
+                                <table className="data-table" id="table-ponto-mensal">
+                                    <thead>
+                                        <tr>
+                                            <th>Funcionário</th>
+                                            <th>Cargo</th>
+                                            <th style={{ textAlign: 'center' }}>Dias Trabalhados</th>
+                                            <th style={{ textAlign: 'center' }}>Total Horas</th>
+                                            <th style={{ textAlign: 'center' }}>Média/Dia</th>
+                                            <th style={{ textAlign: 'right' }}>Valor/Hora</th>
+                                            <th style={{ textAlign: 'right' }}>Valor Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {resumoMensal.map((r) => (
+                                            <tr key={r.funcionarioId}>
+                                                <td>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <div className="avatar" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                                                            {r.nome.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span style={{ fontWeight: 600 }}>{r.nome}</span>
                                                     </div>
-                                                    <span style={{ fontWeight: 600 }}>{r.nome}</span>
-                                                </div>
-                                            </td>
-                                            <td style={{ color: 'var(--text-muted)' }}>{r.cargo}</td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <span className="badge info">{r.totalDias} dias</span>
-                                            </td>
-                                            <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--accent-tertiary)' }}>
-                                                {r.totalHoras.toFixed(1)}h
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                {r.mediaHorasDia.toFixed(1)}h
-                                            </td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                R$ {r.valorHora.toFixed(2)}
-                                            </td>
-                                            <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#4ade80' }}>
-                                                R$ {r.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td style={{ color: 'var(--text-muted)' }}>{r.cargo}</td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <span className="badge info">{r.totalDias} dias</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center', fontWeight: 700, color: 'var(--accent-tertiary)' }}>
+                                                    {r.totalHoras.toFixed(1)}h
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {r.mediaHorasDia.toFixed(1)}h
+                                                </td>
+                                                <td style={{ textAlign: 'right' }}>
+                                                    R$ {r.valorHora.toFixed(2)}
+                                                </td>
+                                                <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#4ade80' }}>
+                                                    R$ {r.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        <tr className="total-row">
+                                            <td colSpan={3} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL</td>
+                                            <td style={{ textAlign: 'center' }}>{totalGeralMensal.toFixed(1)}h</td>
+                                            <td></td>
+                                            <td></td>
+                                            <td style={{ textAlign: 'right', fontSize: '15px' }}>
+                                                R$ {totalValorMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                         </tr>
-                                    ))}
-                                    <tr className="total-row">
-                                        <td colSpan={3} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL</td>
-                                        <td style={{ textAlign: 'center' }}>{totalGeralMensal.toFixed(1)}h</td>
-                                        <td></td>
-                                        <td></td>
-                                        <td style={{ textAlign: 'right', fontSize: '15px' }}>
-                                            R$ {totalValorMensal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
 
@@ -493,57 +497,59 @@ export default function PontoPage() {
                                 <p style={{ fontSize: '13px' }}>Adicione registros para ver o resumo total</p>
                             </div>
                         ) : (
-                            <table className="data-table" id="table-ponto-total">
-                                <thead>
-                                    <tr>
-                                        <th>Funcionário</th>
-                                        <th>Cargo</th>
-                                        <th style={{ textAlign: 'center' }}>Meses</th>
-                                        <th style={{ textAlign: 'center' }}>Dias Trabalhados</th>
-                                        <th style={{ textAlign: 'center' }}>Total Horas</th>
-                                        <th style={{ textAlign: 'center' }}>Média/Dia</th>
-                                        <th style={{ textAlign: 'right' }}>Valor Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {resumoTotal.map((r) => (
-                                        <tr key={r.funcionarioId}>
-                                            <td>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div className="avatar" style={{ background: 'linear-gradient(135deg, #06b6d4, #22d3ee)' }}>
-                                                        {r.nome.charAt(0).toUpperCase()}
+                            <div className="table-responsive-wrapper">
+                                <table className="data-table" id="table-ponto-total">
+                                    <thead>
+                                        <tr>
+                                            <th>Funcionário</th>
+                                            <th>Cargo</th>
+                                            <th style={{ textAlign: 'center' }}>Meses</th>
+                                            <th style={{ textAlign: 'center' }}>Dias Trabalhados</th>
+                                            <th style={{ textAlign: 'center' }}>Total Horas</th>
+                                            <th style={{ textAlign: 'center' }}>Média/Dia</th>
+                                            <th style={{ textAlign: 'right' }}>Valor Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {resumoTotal.map((r) => (
+                                            <tr key={r.funcionarioId}>
+                                                <td>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <div className="avatar" style={{ background: 'linear-gradient(135deg, #06b6d4, #22d3ee)' }}>
+                                                            {r.nome.charAt(0).toUpperCase()}
+                                                        </div>
+                                                        <span style={{ fontWeight: 600 }}>{r.nome}</span>
                                                     </div>
-                                                    <span style={{ fontWeight: 600 }}>{r.nome}</span>
-                                                </div>
-                                            </td>
-                                            <td style={{ color: 'var(--text-muted)' }}>{r.cargo}</td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <span className="badge info">{r.totalMeses}</span>
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <span className="badge warning">{r.totalDias} dias</span>
-                                            </td>
-                                            <td style={{ textAlign: 'center', fontWeight: 700, fontSize: '15px', color: 'var(--accent-tertiary)' }}>
-                                                {r.totalHoras.toFixed(1)}h
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                                {r.mediaHorasDia.toFixed(1)}h
-                                            </td>
-                                            <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#4ade80' }}>
-                                                R$ {r.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </td>
+                                                <td style={{ color: 'var(--text-muted)' }}>{r.cargo}</td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <span className="badge info">{r.totalMeses}</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <span className="badge warning">{r.totalDias} dias</span>
+                                                </td>
+                                                <td style={{ textAlign: 'center', fontWeight: 700, fontSize: '15px', color: 'var(--accent-tertiary)' }}>
+                                                    {r.totalHoras.toFixed(1)}h
+                                                </td>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    {r.mediaHorasDia.toFixed(1)}h
+                                                </td>
+                                                <td style={{ textAlign: 'right', fontWeight: 700, fontSize: '15px', color: '#4ade80' }}>
+                                                    R$ {r.valorTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        <tr className="total-row">
+                                            <td colSpan={4} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL GERAL</td>
+                                            <td style={{ textAlign: 'center', fontSize: '15px' }}>{totalGeralGlobal.toFixed(1)}h</td>
+                                            <td></td>
+                                            <td style={{ textAlign: 'right', fontSize: '15px' }}>
+                                                R$ {totalValorGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                                             </td>
                                         </tr>
-                                    ))}
-                                    <tr className="total-row">
-                                        <td colSpan={4} style={{ textAlign: 'right', paddingRight: '16px' }}>TOTAL GERAL</td>
-                                        <td style={{ textAlign: 'center', fontSize: '15px' }}>{totalGeralGlobal.toFixed(1)}h</td>
-                                        <td></td>
-                                        <td style={{ textAlign: 'right', fontSize: '15px' }}>
-                                            R$ {totalValorGlobal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
 

@@ -225,85 +225,87 @@ export default function AlmoxarifadoPage() {
                                 />
                             </div>
                         </div>
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Data</th>
-                                    <th>Funcionário</th>
-                                    <th>Item</th>
-                                    <th style={{ textAlign: 'center' }}>Qtd</th>
-                                    <th>Tipo</th>
-                                    <th>Observação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {movimentacoesEstoque
-                                    .filter(mov => {
-                                        if (!buscaHistórico) return true;
-                                        const termo = buscaHistórico.toLowerCase();
-                                        const item = itensEstoque.find(i => i.id === mov.itemId);
-                                        const func = funcionarios.find(f => f.id === mov.funcionarioId);
-
-                                        const matchNomeFuncionario = func?.nome.toLowerCase().includes(termo);
-                                        const matchNomeItem = item?.nome.toLowerCase().includes(termo);
-                                        const matchTipo = mov.tipo.toLowerCase().includes(termo);
-                                        const matchObs = mov.observacao?.toLowerCase().includes(termo);
-
-                                        return matchNomeFuncionario || matchNomeItem || matchTipo || matchObs;
-                                    })
-                                    .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
-                                    .map(mov => {
-                                        const item = itensEstoque.find(i => i.id === mov.itemId);
-                                        const func = funcionarios.find(f => f.id === mov.funcionarioId);
-
-                                        const corTipo = mov.tipo === 'entrada' ? '#34d399' : mov.tipo === 'saida' ? '#f87171' : '#60a5fa';
-                                        const bgTipo = mov.tipo === 'entrada' ? 'rgba(16,185,129,0.1)' : mov.tipo === 'saida' ? 'rgba(239,68,68,0.1)' : 'rgba(56,189,248,0.1)';
-
-                                        return (
-                                            <tr key={mov.id}>
-                                                <td>
-                                                    <div style={{ fontWeight: 600 }}>{new Date(mov.data).toLocaleDateString('pt-BR')}</div>
-                                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                                        {new Date(mov.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    {func ? (
-                                                        <>
-                                                            <div style={{ fontWeight: 600 }}>{func.nome}</div>
-                                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{func.cargo}</div>
-                                                        </>
-                                                    ) : '-'}
-                                                </td>
-                                                <td>
-                                                    <div style={{ fontWeight: 600 }}>{item?.nome || 'Item Excluído'}</div>
-                                                    {item?.categoria && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.categoria}</div>}
-                                                </td>
-                                                <td style={{ textAlign: 'center' }}>
-                                                    <span style={{ fontSize: '15px', fontWeight: 700, color: corTipo }}>
-                                                        {mov.tipo === 'saida' ? '-' : '+'}{mov.quantidade}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className="badge" style={{ background: bgTipo, color: corTipo }}>
-                                                        {mov.tipo === 'saida' ? 'Retirada' : mov.tipo === 'entrada' ? 'Entrada' : 'Devolução'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{mov.observacao || '-'}</span>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })}
-                                {movimentacoesEstoque.length === 0 && (
+                        <div className="table-responsive-wrapper">
+                            <table className="data-table">
+                                <thead>
                                     <tr>
-                                        <td colSpan={6} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
-                                            Nenhuma movimentação registrada.
-                                        </td>
+                                        <th>Data</th>
+                                        <th>Funcionário</th>
+                                        <th>Item</th>
+                                        <th style={{ textAlign: 'center' }}>Qtd</th>
+                                        <th>Tipo</th>
+                                        <th>Observação</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {movimentacoesEstoque
+                                        .filter(mov => {
+                                            if (!buscaHistórico) return true;
+                                            const termo = buscaHistórico.toLowerCase();
+                                            const item = itensEstoque.find(i => i.id === mov.itemId);
+                                            const func = funcionarios.find(f => f.id === mov.funcionarioId);
+
+                                            const matchNomeFuncionario = func?.nome.toLowerCase().includes(termo);
+                                            const matchNomeItem = item?.nome.toLowerCase().includes(termo);
+                                            const matchTipo = mov.tipo.toLowerCase().includes(termo);
+                                            const matchObs = mov.observacao?.toLowerCase().includes(termo);
+
+                                            return matchNomeFuncionario || matchNomeItem || matchTipo || matchObs;
+                                        })
+                                        .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
+                                        .map(mov => {
+                                            const item = itensEstoque.find(i => i.id === mov.itemId);
+                                            const func = funcionarios.find(f => f.id === mov.funcionarioId);
+
+                                            const corTipo = mov.tipo === 'entrada' ? '#34d399' : mov.tipo === 'saida' ? '#f87171' : '#60a5fa';
+                                            const bgTipo = mov.tipo === 'entrada' ? 'rgba(16,185,129,0.1)' : mov.tipo === 'saida' ? 'rgba(239,68,68,0.1)' : 'rgba(56,189,248,0.1)';
+
+                                            return (
+                                                <tr key={mov.id}>
+                                                    <td data-label="Data">
+                                                        <div style={{ fontWeight: 600 }}>{new Date(mov.data).toLocaleDateString('pt-BR')}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                                            {new Date(mov.criadoEm).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                                        </div>
+                                                    </td>
+                                                    <td data-label="Funcionário">
+                                                        {func ? (
+                                                            <>
+                                                                <div style={{ fontWeight: 600 }}>{func.nome}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{func.cargo}</div>
+                                                            </>
+                                                        ) : '-'}
+                                                    </td>
+                                                    <td data-label="Item">
+                                                        <div style={{ fontWeight: 600 }}>{item?.nome || 'Item Excluído'}</div>
+                                                        {item?.categoria && <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{item.categoria}</div>}
+                                                    </td>
+                                                    <td data-label="Qtd" style={{ textAlign: 'center' }}>
+                                                        <span style={{ fontSize: '15px', fontWeight: 700, color: corTipo }}>
+                                                            {mov.tipo === 'saida' ? '-' : '+'}{mov.quantidade}
+                                                        </span>
+                                                    </td>
+                                                    <td data-label="Tipo">
+                                                        <span className="badge" style={{ background: bgTipo, color: corTipo }}>
+                                                            {mov.tipo === 'saida' ? 'Retirada' : mov.tipo === 'entrada' ? 'Entrada' : 'Devolução'}
+                                                        </span>
+                                                    </td>
+                                                    <td data-label="Observação">
+                                                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{mov.observacao || '-'}</span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    {movimentacoesEstoque.length === 0 && (
+                                        <tr>
+                                            <td colSpan={6} style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)' }}>
+                                                Nenhuma movimentação registrada.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 ) : itensFiltrados.length === 0 ? (
                     <div className="empty-state">
@@ -316,76 +318,78 @@ export default function AlmoxarifadoPage() {
                         <p style={{ fontSize: '13px' }}>Cadastre ferramentas, EPIs, uniformes e materiais de consumo</p>
                     </div>
                 ) : (
-                    <table className="data-table" id="table-estoque">
-                        <thead>
-                            <tr>
-                                <th>Item / Descrição</th>
-                                <th>Categoria</th>
-                                <th style={{ textAlign: 'center' }}>Quantidade</th>
-                                <th>Status</th>
-                                <th style={{ textAlign: 'right' }}>Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {itensFiltrados.sort((a, b) => a.nome.localeCompare(b.nome)).map(item => {
-                                const baixoEstoque = item.quantidade <= item.estoqueMinimo;
-                                const zerado = item.quantidade === 0;
+                    <div className="table-responsive-wrapper">
+                        <table className="data-table" id="table-estoque">
+                            <thead>
+                                <tr>
+                                    <th>Item / Descrição</th>
+                                    <th>Categoria</th>
+                                    <th style={{ textAlign: 'center' }}>Quantidade</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {itensFiltrados.sort((a, b) => a.nome.localeCompare(b.nome)).map(item => {
+                                    const baixoEstoque = item.quantidade <= item.estoqueMinimo;
+                                    const zerado = item.quantidade === 0;
 
-                                return (
-                                    <tr key={item.id} style={{ background: zerado ? 'rgba(239,68,68,0.03)' : baixoEstoque ? 'rgba(245,158,11,0.03)' : 'transparent' }}>
-                                        <td>
-                                            <div style={{ fontWeight: 600, fontSize: '14px' }}>{item.nome}</div>
-                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mínimo ideal: {item.estoqueMinimo} {item.unidade}</div>
-                                        </td>
-                                        <td>
-                                            <span className="badge info" style={{
-                                                fontSize: '11px',
-                                                background: item.categoria === 'EPI' ? 'rgba(16,185,129,0.1)' : item.categoria === 'Uniforme' ? 'rgba(168,85,247,0.1)' : item.categoria === 'Ferramenta' ? 'rgba(56,189,248,0.1)' : 'rgba(244,63,94,0.1)',
-                                                color: item.categoria === 'EPI' ? '#34d399' : item.categoria === 'Uniforme' ? '#c084fc' : item.categoria === 'Ferramenta' ? '#7dd3fc' : '#fb7185'
-                                            }}>
-                                                {item.categoria}
-                                            </span>
-                                        </td>
-                                        <td style={{ textAlign: 'center' }}>
-                                            <span style={{
-                                                fontSize: '16px', fontWeight: 800,
-                                                color: zerado ? '#ef4444' : baixoEstoque ? '#fbbf24' : '#4ade80'
-                                            }}>
-                                                {item.quantidade}
-                                            </span>
-                                            <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>{item.unidade}</span>
-                                        </td>
-                                        <td>
-                                            {zerado ? (
-                                                <span className="badge warning" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>● Faltando</span>
-                                            ) : baixoEstoque ? (
-                                                <span className="badge warning">● Baixo</span>
-                                            ) : (
-                                                <span className="badge success">● OK</span>
-                                            )}
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                                                <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openMovimentacao(item.id)}>
-                                                    Saída/Entrada
-                                                </button>
-                                                {isAdmin && (
-                                                    <>
-                                                        <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openEditItem(item)}>
-                                                            Editar
-                                                        </button>
-                                                        <button className="btn-danger" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => handleDeleteItem(item.id)}>
-                                                            Excluir
-                                                        </button>
-                                                    </>
+                                    return (
+                                        <tr key={item.id} style={{ background: zerado ? 'rgba(239,68,68,0.03)' : baixoEstoque ? 'rgba(245,158,11,0.03)' : 'transparent' }}>
+                                            <td data-label="Item / Descrição">
+                                                <div style={{ fontWeight: 600, fontSize: '14px' }}>{item.nome}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mínimo ideal: {item.estoqueMinimo} {item.unidade}</div>
+                                            </td>
+                                            <td data-label="Categoria">
+                                                <span className="badge info" style={{
+                                                    fontSize: '11px',
+                                                    background: item.categoria === 'EPI' ? 'rgba(16,185,129,0.1)' : item.categoria === 'Uniforme' ? 'rgba(168,85,247,0.1)' : item.categoria === 'Ferramenta' ? 'rgba(56,189,248,0.1)' : 'rgba(244,63,94,0.1)',
+                                                    color: item.categoria === 'EPI' ? '#34d399' : item.categoria === 'Uniforme' ? '#c084fc' : item.categoria === 'Ferramenta' ? '#7dd3fc' : '#fb7185'
+                                                }}>
+                                                    {item.categoria}
+                                                </span>
+                                            </td>
+                                            <td data-label="Quantidade" style={{ textAlign: 'center' }}>
+                                                <span style={{
+                                                    fontSize: '16px', fontWeight: 800,
+                                                    color: zerado ? '#ef4444' : baixoEstoque ? '#fbbf24' : '#4ade80'
+                                                }}>
+                                                    {item.quantidade}
+                                                </span>
+                                                <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>{item.unidade}</span>
+                                            </td>
+                                            <td data-label="Status">
+                                                {zerado ? (
+                                                    <span className="badge warning" style={{ background: 'rgba(239,68,68,0.15)', color: '#f87171' }}>● Faltando</span>
+                                                ) : baixoEstoque ? (
+                                                    <span className="badge warning">● Baixo</span>
+                                                ) : (
+                                                    <span className="badge success">● OK</span>
                                                 )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
+                                            </td>
+                                            <td data-label="Ações" style={{ textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                                                    <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openMovimentacao(item.id)}>
+                                                        Saída/Entrada
+                                                    </button>
+                                                    {isAdmin && (
+                                                        <>
+                                                            <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openEditItem(item)}>
+                                                                Editar
+                                                            </button>
+                                                            <button className="btn-danger" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => handleDeleteItem(item.id)}>
+                                                                Excluir
+                                                            </button>
+                                                        </>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
 

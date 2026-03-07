@@ -16,12 +16,6 @@
   --sidebar-width: 260px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
 
 * {
   scrollbar-width: thin;
@@ -174,12 +168,16 @@ body {
   letter-spacing: 0.05em;
   color: var(--text-muted);
   border-bottom: 1px solid var(--card-border);
+  white-space: nowrap;
+  touch-action: pan-x pan-y;
 }
 
 .data-table td {
   padding: 14px 16px;
   font-size: 14px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+  touch-action: pan-x pan-y;
 }
 
 .data-table tr:hover td {
@@ -543,6 +541,137 @@ body {
   .form-row {
     grid-template-columns: 1fr;
   }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .stat-card {
+    padding: 16px !important;
+  }
+
+  .table-responsive-wrapper {
+    overflow-x: visible !important;
+    width: 100% !important;
+    margin-bottom: 24px !important;
+    user-select: auto !important;
+    -webkit-user-select: auto !important;
+    touch-action: auto !important;
+  }
+
+  .data-table,
+  .data-table thead,
+  .data-table tbody,
+  .data-table th,
+  .data-table td,
+  .data-table tr {
+    display: block !important;
+    width: 100% !important;
+  }
+
+  .data-table thead tr {
+    position: absolute !important;
+    top: -9999px !important;
+    left: -9999px !important;
+  }
+
+  .data-table {
+    border: none !important;
+  }
+
+  .data-table tr {
+    background: var(--card-bg) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 12px !important;
+    margin-bottom: 16px !important;
+    padding: 12px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .data-table td {
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    position: relative !important;
+    padding-left: 45% !important;
+    text-align: right !important;
+    white-space: normal !important;
+    min-height: 48px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    align-items: center !important;
+  }
+
+  .data-table td:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .data-table td::before {
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    transform: translateY(-50%);
+    width: 40%;
+    padding-right: 10px;
+    white-space: nowrap;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    content: attr(data-label);
+  }
+
+  /* Fix align inside td on mobile */
+  .data-table td>div {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+  }
+
+  .data-table td[data-label="Ações"]>div {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.table-responsive-wrapper {
+  overflow-x: auto;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.table-responsive-wrapper:active {
+  cursor: grabbing;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 4px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 4px;
+}
+
+.table-responsive-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.6);
 }
 
 /* Spin animation */
@@ -555,6 +684,7 @@ body {
     transform: rotate(360deg);
   }
 }
+
 @media (max-width: 768px) {
   .hidden-on-mobile {
     display: none !important;
