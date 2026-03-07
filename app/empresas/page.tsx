@@ -35,6 +35,7 @@ export default function EmpresasPage() {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
+        if (!isAdmin) return;
         if (!form.razaoSocial || !form.cnpj) return;
         if (editingId) {
             updateEmpresa(editingId, form);
@@ -45,6 +46,7 @@ export default function EmpresasPage() {
     };
 
     const handleDelete = (id: string) => {
+        if (!isAdmin) return;
         const funcCount = funcionarios.filter(f => f.empresaId === id).length;
         if (funcCount > 0) {
             alert(`Esta empresa possui ${funcCount} funcionário(s) vinculado(s). Remova os vínculos antes de excluir.`);
@@ -70,13 +72,15 @@ export default function EmpresasPage() {
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
                     {empresas.length} empresa{empresas.length !== 1 ? 's' : ''} cadastrada{empresas.length !== 1 ? 's' : ''}
                 </p>
-                <button className="btn-primary" onClick={openNew} id="btn-add-empresa">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Nova Empresa
-                </button>
+                {isAdmin && (
+                    <button className="btn-primary" onClick={openNew} id="btn-add-empresa">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Nova Empresa
+                    </button>
+                )}
             </div>
 
             {empresas.length === 0 ? (
@@ -141,16 +145,16 @@ export default function EmpresasPage() {
                                         <span className="badge info" style={{ fontSize: '12px' }}>
                                             {funcCount} funcionário{funcCount !== 1 ? 's' : ''}
                                         </span>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button className="btn-secondary" onClick={() => openEdit(emp)} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                                                Editar
-                                            </button>
-                                            {isAdmin && (
+                                        {isAdmin && (
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <button className="btn-secondary" onClick={() => openEdit(emp)} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                                                    Editar
+                                                </button>
                                                 <button className="btn-danger" onClick={() => handleDelete(emp.id)}>
                                                     Excluir
                                                 </button>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
