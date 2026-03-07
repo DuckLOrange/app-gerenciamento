@@ -72,7 +72,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 </div>
             </div>
 
-            <div style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }} className="hidden-on-mobile">
                 <svg
                     style={{
                         position: 'absolute',
@@ -89,12 +89,14 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 <input
                     type="text"
                     placeholder="Buscar..."
-                    className="search-input hidden-on-mobile"
+                    className="search-input"
                     style={{ width: '280px' }}
                     id="search-input"
                 />
+            </div>
 
-                {/* Mobile Menu Toggle (Right Side) */}
+            {/* Mobile Menu Toggle (Right Side) */}
+            <div className="md:hidden">
                 <button
                     onClick={onToggleSidebar}
                     style={{
@@ -110,7 +112,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                         fontWeight: 600,
                         fontSize: '14px'
                     }}
-                    className="md:hidden"
                     title="Menu"
                 >
                     Menu
@@ -121,6 +122,7 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     </svg>
                 </button>
             </div>
-        </header>
+        </div>
+        </header >
     );
 }
