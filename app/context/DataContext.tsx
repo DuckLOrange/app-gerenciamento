@@ -101,7 +101,7 @@ export interface AnotacaoLivre {
 export interface ItemEstoque {
   id: string;
   nome: string;
-  categoria: 'EPI' | 'Ferramenta' | 'Consumível';
+  categoria: 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível';
   quantidade: number;
   unidade: string; // 'un', 'par', 'kg', 'm', 'caixa'
   estoqueMinimo: number;

@@ -5,7 +5,7 @@ import { useData, ItemEstoque } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
 
-type TabType = 'todos' | 'EPI' | 'Ferramenta' | 'Consumível' | 'histórico';
+type TabType = 'todos' | 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível' | 'histórico';
 
 export default function AlmoxarifadoPage() {
     const { itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque, movimentacoesEstoque, registrarMovimentacaoEstoque, funcionarios } = useData();
@@ -20,7 +20,7 @@ export default function AlmoxarifadoPage() {
     // Form Item
     const [formItem, setFormItem] = useState({
         nome: '',
-        categoria: 'Ferramenta' as 'EPI' | 'Ferramenta' | 'Consumível',
+        categoria: 'Ferramenta' as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível',
         unidade: 'un',
         estoqueMinimo: 5
     });
@@ -49,6 +49,7 @@ export default function AlmoxarifadoPage() {
         totalItens: itensEstoque.length,
         ferramentas: itensEstoque.filter(i => i.categoria === 'Ferramenta').length,
         epis: itensEstoque.filter(i => i.categoria === 'EPI').length,
+        uniformes: itensEstoque.filter(i => i.categoria === 'Uniforme').length,
         alertaBaixo: itensBaixoEstoque.length
     };
 
@@ -141,9 +142,9 @@ export default function AlmoxarifadoPage() {
                     <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px' }}>{resumo.totalItens}</div>
                 </div>
                 <div className="glass-card stat-card blue animate-fade-in animate-delay-100" style={{ padding: '24px' }}>
-                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ferramentas & EPIs</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 500 }}>Ferramentas, EPIs & Uniformes</span>
                     <div style={{ fontSize: '28px', fontWeight: 800, marginTop: '8px', color: '#60a5fa' }}>
-                        {resumo.ferramentas} / {resumo.epis}
+                        {resumo.ferramentas} / {resumo.epis} / {resumo.uniformes}
                     </div>
                 </div>
                 <div className="glass-card stat-card red animate-fade-in animate-delay-200" style={{ padding: '24px', position: 'relative', overflow: 'hidden' }}>
@@ -160,7 +161,7 @@ export default function AlmoxarifadoPage() {
             {/* Ações e Filtros */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                 <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
-                    {(['todos', 'EPI', 'Ferramenta', 'Consumível', 'histórico'] as TabType[]).map(tab => (
+                    {(['todos', 'EPI', 'Uniforme', 'Ferramenta', 'Consumível', 'histórico'] as TabType[]).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -312,7 +313,7 @@ export default function AlmoxarifadoPage() {
                             <line x1="12" y1="22.08" x2="12" y2="12"></line>
                         </svg>
                         <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Nenhum item encontrado</p>
-                        <p style={{ fontSize: '13px' }}>Cadastre ferramentas, EPIs e materiais de consumo</p>
+                        <p style={{ fontSize: '13px' }}>Cadastre ferramentas, EPIs, uniformes e materiais de consumo</p>
                     </div>
                 ) : (
                     <table className="data-table" id="table-estoque">
@@ -339,8 +340,8 @@ export default function AlmoxarifadoPage() {
                                         <td>
                                             <span className="badge info" style={{
                                                 fontSize: '11px',
-                                                background: item.categoria === 'EPI' ? 'rgba(16,185,129,0.1)' : item.categoria === 'Ferramenta' ? 'rgba(56,189,248,0.1)' : 'rgba(244,63,94,0.1)',
-                                                color: item.categoria === 'EPI' ? '#34d399' : item.categoria === 'Ferramenta' ? '#7dd3fc' : '#fb7185'
+                                                background: item.categoria === 'EPI' ? 'rgba(16,185,129,0.1)' : item.categoria === 'Uniforme' ? 'rgba(168,85,247,0.1)' : item.categoria === 'Ferramenta' ? 'rgba(56,189,248,0.1)' : 'rgba(244,63,94,0.1)',
+                                                color: item.categoria === 'EPI' ? '#34d399' : item.categoria === 'Uniforme' ? '#c084fc' : item.categoria === 'Ferramenta' ? '#7dd3fc' : '#fb7185'
                                             }}>
                                                 {item.categoria}
                                             </span>
@@ -398,8 +399,9 @@ export default function AlmoxarifadoPage() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Categoria</label>
-                            <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as 'EPI' | 'Ferramenta' | 'Consumível' }))}>
+                            <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível' }))}>
                                 <option value="EPI">EPI (Segurança)</option>
+                                <option value="Uniforme">Uniforme</option>
                                 <option value="Ferramenta">Ferramenta</option>
                                 <option value="Consumível">Material Consumível</option>
                             </select>
