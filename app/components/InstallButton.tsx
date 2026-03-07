@@ -34,7 +34,7 @@ export default function InstallButton() {
                 // But let's show it after 5 seconds as a fallback if not standalone
                 const timer = setTimeout(() => {
                     if (!isStandalone) setIsVisible(true);
-                }, 5000);
+                }, 500);
                 return () => clearTimeout(timer);
             }
         }
