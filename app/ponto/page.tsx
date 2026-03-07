@@ -236,7 +236,7 @@ export default function PontoPage() {
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
-                        Registrar Ponto
+                        Registrar Horas
                     </button>
                 </div>
             </div>
@@ -271,7 +271,7 @@ export default function PontoPage() {
                                     <polyline points="12 6 12 12 16 14" />
                                 </svg>
                                 <p style={{ fontSize: '15px', fontWeight: 600, marginBottom: '4px' }}>Nenhum registro de ponto</p>
-                                <p style={{ fontSize: '13px' }}>Clique em &quot;Registrar Ponto&quot; para adicionar</p>
+                                <p style={{ fontSize: '13px' }}>Clique em &quot;Registrar Horas&quot; para adicionar</p>
                             </div>
                         ) : (
                             <div className="table-responsive-wrapper">
@@ -606,7 +606,7 @@ export default function PontoPage() {
             )}
 
             {/* Modal */}
-            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Ponto">
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Registrar Horas">
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Funcionário</label>
