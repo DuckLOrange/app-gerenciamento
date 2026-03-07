@@ -122,7 +122,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                     </svg>
                 </button>
             </div>
-        </div>
         </header >
     );
 }
