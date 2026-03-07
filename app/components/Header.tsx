@@ -49,30 +49,6 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
             flexWrap: 'wrap',
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {/* Mobile Menu Toggle */}
-                <button
-                    onClick={onToggleSidebar}
-                    style={{
-                        background: 'rgba(255,255,255,0.05)',
-                        border: '1px solid var(--card-border)',
-                        borderRadius: '10px',
-                        width: '40px',
-                        height: '40px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'var(--foreground)',
-                        cursor: 'pointer'
-                    }}
-                    className="md:hidden"
-                    title="Menu"
-                >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="3" y1="12" x2="21" y2="12"></line>
-                        <line x1="3" y1="6" x2="21" y2="6"></line>
-                        <line x1="3" y1="18" x2="21" y2="18"></line>
-                    </svg>
-                </button>
                 <div>
                     <h1 style={{
                         fontSize: '28px',
@@ -113,10 +89,37 @@ export default function Header({ onToggleSidebar }: HeaderProps) {
                 <input
                     type="text"
                     placeholder="Buscar..."
-                    className="search-input"
+                    className="search-input hidden-on-mobile"
                     style={{ width: '280px' }}
                     id="search-input"
                 />
+
+                {/* Mobile Menu Toggle (Right Side) */}
+                <button
+                    onClick={onToggleSidebar}
+                    style={{
+                        background: 'rgba(255,255,255,0.05)',
+                        border: '1px solid var(--card-border)',
+                        borderRadius: '10px',
+                        padding: '8px 16px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        color: 'var(--foreground)',
+                        cursor: 'pointer',
+                        fontWeight: 600,
+                        fontSize: '14px'
+                    }}
+                    className="md:hidden"
+                    title="Menu"
+                >
+                    Menu
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
             </div>
         </header>
     );

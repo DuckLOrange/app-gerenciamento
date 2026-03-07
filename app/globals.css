@@ -555,3 +555,8 @@ body {
     transform: rotate(360deg);
   }
 }
+@media (max-width: 768px) {
+  .hidden-on-mobile {
+    display: none !important;
+  }
+}
