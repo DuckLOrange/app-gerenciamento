@@ -22,7 +22,8 @@ export default function AlmoxarifadoPage() {
         nome: '',
         categoria: 'Ferramenta' as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível',
         unidade: 'un',
-        estoqueMinimo: 5
+        estoqueMinimo: 5,
+        quantidade: 0
     });
 
     // Form Movimentação
@@ -55,27 +56,41 @@ export default function AlmoxarifadoPage() {
 
     // Handlers Item
     const openNewItem = () => {
-        setFormItem({ nome: '', categoria: 'Ferramenta', unidade: 'un', estoqueMinimo: 5 });
+        setFormItem({ nome: '', categoria: 'Ferramenta', unidade: 'un', estoqueMinimo: 5, quantidade: 0 });
         setEditingItemId(null);
         setModalItemOpen(true);
     };
 
     const openEditItem = (item: ItemEstoque) => {
-        setFormItem({ nome: item.nome, categoria: item.categoria, unidade: item.unidade, estoqueMinimo: item.estoqueMinimo });
+        setFormItem({
+            nome: item.nome,
+            categoria: item.categoria,
+            unidade: item.unidade,
+            estoqueMinimo: item.estoqueMinimo,
+            quantidade: item.quantidade
+        });
         setEditingItemId(item.id);
         setModalItemOpen(true);
     };
 
-    const handleSalvarItem = (e: React.FormEvent) => {
+    const handleSalvarItem = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!isAdmin) return;
         if (!formItem.nome) return;
 
-        if (editingItemId) {
-            updateItemEstoque(editingItemId, formItem);
-        } else {
-            addItemEstoque(formItem);
+        try {
+            if (editingItemId) {
+                await updateItemEstoque(editingItemId, formItem);
+                alert('Item atualizado com sucesso!');
+            } else {
+                await addItemEstoque(formItem);
+                alert('Item cadastrado com sucesso!');
+            }
+            setModalItemOpen(false);
+        } catch (error) {
+            console.error('Erro ao salvar item:', error);
+            alert('Erro ao salvar item. Tente novamente.');
         }
-        setModalItemOpen(false);
     };
 
     const handleDeleteItem = (id: string) => {
@@ -101,7 +116,7 @@ export default function AlmoxarifadoPage() {
         setModalMovOpen(true);
     };
 
-    const handleSalvarMovimentacao = (e: React.FormEvent) => {
+    const handleSalvarMovimentacao = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!formMov.itemId || formMov.quantidade <= 0) return;
 
@@ -121,16 +136,21 @@ export default function AlmoxarifadoPage() {
             return;
         }
 
-        registrarMovimentacaoEstoque({
-            itemId: formMov.itemId,
-            tipo: formMov.tipo,
-            quantidade: Number(formMov.quantidade),
-            data: new Date().toISOString().split('T')[0],
-            funcionarioId: formMov.funcionarioId || undefined,
-            observacao: formMov.observacao
-        });
-
-        setModalMovOpen(false);
+        try {
+            await registrarMovimentacaoEstoque({
+                itemId: formMov.itemId,
+                tipo: formMov.tipo,
+                quantidade: Number(formMov.quantidade),
+                data: new Date().toISOString().split('T')[0],
+                funcionarioId: formMov.funcionarioId || undefined,
+                observacao: formMov.observacao
+            });
+            alert('Movimentação registrada com sucesso!');
+            setModalMovOpen(false);
+        } catch (error) {
+            console.error('Erro ao registrar movimentação:', error);
+            alert('Erro ao registrar movimentação. Tente novamente.');
+        }
     };
 
     return (
@@ -179,20 +199,24 @@ export default function AlmoxarifadoPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button className="btn-secondary" onClick={() => openMovimentacao()} id="btn-movimentar">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                        </svg>
-                        Movimentar Estoque
-                    </button>
-                    <button className="btn-primary" onClick={openNewItem} id="btn-add-item">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                            <line x1="12" y1="5" x2="12" y2="19" />
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                        </svg>
-                        Novo Item
-                    </button>
+                    {isAdmin && (
+                        <>
+                            <button className="btn-secondary" onClick={() => openMovimentacao()} id="btn-movimentar">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                </svg>
+                                Movimentar Estoque
+                            </button>
+                            <button className="btn-primary" onClick={openNewItem} id="btn-add-item">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                                    <line x1="12" y1="5" x2="12" y2="19" />
+                                    <line x1="5" y1="12" x2="19" y2="12" />
+                                </svg>
+                                Novo Item
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -369,11 +393,11 @@ export default function AlmoxarifadoPage() {
                                             </td>
                                             <td data-label="Ações" style={{ textAlign: 'right' }}>
                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                                                    <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openMovimentacao(item.id)}>
-                                                        Saída/Entrada
-                                                    </button>
                                                     {isAdmin && (
                                                         <>
+                                                            <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openMovimentacao(item.id)}>
+                                                                Saída/Entrada
+                                                            </button>
                                                             <button className="btn-secondary" style={{ padding: '6px 10px', fontSize: '11px' }} onClick={() => openEditItem(item)}>
                                                                 Editar
                                                             </button>
@@ -422,9 +446,17 @@ export default function AlmoxarifadoPage() {
                             </select>
                         </div>
                     </div>
-                    <div className="form-group">
-                        <label>Alerta de Estoque Mínimo</label>
-                        <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
+                    <div className="form-row">
+                        <div className="form-group">
+                            <label>Alerta de Estoque Mínimo</label>
+                            <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
+                        </div>
+                        {!editingItemId && (
+                            <div className="form-group">
+                                <label>Estoque Inicial</label>
+                                <input type="number" min="0" className="form-input" value={formItem.quantidade} onChange={e => setFormItem(p => ({ ...p, quantidade: Number(e.target.value) }))} placeholder="Qtd inicial no sistema" />
+                            </div>
+                        )}
                     </div>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                         <button type="button" className="btn-secondary" onClick={() => setModalItemOpen(false)}>Cancelar</button>

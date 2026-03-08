@@ -162,7 +162,7 @@ interface DataContextType {
 
   // Almoxarifado
   itensEstoque: ItemEstoque[];
-  addItemEstoque: (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => Promise<void>;
+  addItemEstoque: (i: Omit<ItemEstoque, 'id' | 'criadoEm'>) => Promise<void>;
   updateItemEstoque: (id: string, i: Partial<ItemEstoque>) => Promise<void>;
   deleteItemEstoque: (id: string) => Promise<void>;
 
@@ -478,10 +478,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ---- Almoxarifado ----
-  const addItemEstoque = async (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => {
+  const addItemEstoque = async (i: Omit<ItemEstoque, 'id' | 'criadoEm'>) => {
     await addDoc(collection(db, 'itensEstoque'), {
       ...i,
-      quantidade: 0,
       criadoEm: new Date().toISOString()
     });
   };
@@ -503,11 +502,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     const item = itensEstoque.find(i => i.id === m.itemId);
     if (!item) return;
 
-    let novaQtd = item.quantidade;
+    let novaQtd = Number(item.quantidade) || 0;
     if (m.tipo === 'entrada' || m.tipo === 'devolucao') {
-      novaQtd += m.quantidade;
+      novaQtd += Number(m.quantidade);
     } else if (m.tipo === 'saida') {
-      novaQtd -= m.quantidade;
+      novaQtd -= Number(m.quantidade);
     }
 
     await updateDoc(doc(db, 'itensEstoque', m.itemId), {
