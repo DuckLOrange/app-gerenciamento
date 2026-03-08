@@ -9,6 +9,7 @@ import {
   updateDoc,
   deleteDoc,
   doc,
+  getDoc,
   query
 } from 'firebase/firestore';
 
@@ -495,22 +496,29 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   const registrarMovimentacaoEstoque = async (m: Omit<MovimentacaoEstoque, 'id' | 'criadoEm'>) => {
+    // Cleaning data: Remove fields with undefined values (JSON stringify trick)
+    const cleanedData = JSON.parse(JSON.stringify(m));
+
     await addDoc(collection(db, 'movimentacoesEstoque'), {
-      ...m,
+      ...cleanedData,
       criadoEm: new Date().toISOString()
     });
 
-    const item = itensEstoque.find(i => i.id === m.itemId);
-    if (!item) return;
+    const itemRef = doc(db, 'itensEstoque', m.itemId);
+    const itemSnap = await getDoc(itemRef);
+    if (!itemSnap.exists()) return;
 
-    let novaQtd = Number(item.quantidade) || 0;
-    if (m.tipo === 'entrada' || m.tipo === 'devolucao') {
+    const data = itemSnap.data();
+    let novaQtd = Number(data.quantidade) || 0;
+    const tipo = m.tipo.toLowerCase();
+
+    if (tipo.includes('entrada') || tipo.includes('devolucao')) {
       novaQtd += Number(m.quantidade);
-    } else if (m.tipo === 'saida') {
+    } else if (tipo.includes('saida')) {
       novaQtd -= Number(m.quantidade);
     }
 
-    await updateDoc(doc(db, 'itensEstoque', m.itemId), {
+    await updateDoc(itemRef, {
       quantidade: Math.max(0, novaQtd)
     });
   };

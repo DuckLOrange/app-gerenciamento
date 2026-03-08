@@ -140,7 +140,7 @@ export default function AlmoxarifadoPage() {
                 tipo: formMov.tipo,
                 quantidade: Number(formMov.quantidade),
                 data: new Date().toISOString().split('T')[0],
-                funcionarioId: formMov.funcionarioId || undefined,
+                funcionarioId: formMov.funcionarioId || "",
                 observacao: formMov.observacao
             });
             alert('Movimentação registrada com sucesso!');
