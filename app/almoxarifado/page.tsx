@@ -422,32 +422,36 @@ export default function AlmoxarifadoPage() {
                         <label>Nome do Item / Descrição *</label>
                         <input type="text" className="form-input" value={formItem.nome} onChange={e => setFormItem(p => ({ ...p, nome: e.target.value }))} placeholder="Ex: Luva de Raspa, Disco de Corte 9 polegadas..." required />
                     </div>
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Categoria</label>
-                            <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível' }))}>
-                                <option value="EPI">EPI (Segurança)</option>
-                                <option value="Uniforme">Uniforme</option>
-                                <option value="Ferramenta">Ferramenta</option>
-                                <option value="Consumível">Material Consumível</option>
-                            </select>
-                        </div>
-                        <div className="form-group">
-                            <label>Unidade de Medida</label>
-                            <select className="form-select" value={formItem.unidade} onChange={e => setFormItem(p => ({ ...p, unidade: e.target.value }))}>
-                                <option value="un">Unidade (un)</option>
-                                <option value="par">Par</option>
-                                <option value="cx">Caixa (cx)</option>
-                                <option value="kg">Quilos (kg)</option>
-                                <option value="m">Metros (m)</option>
-                                <option value="l">Litros (l)</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div className="form-group">
-                        <label>Alerta de Estoque Mínimo</label>
-                        <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
-                    </div>
+                    {editingItemId && (
+                        <>
+                            <div className="form-row">
+                                <div className="form-group">
+                                    <label>Categoria</label>
+                                    <select className="form-select" value={formItem.categoria} onChange={e => setFormItem(p => ({ ...p, categoria: e.target.value as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível' }))}>
+                                        <option value="EPI">EPI (Segurança)</option>
+                                        <option value="Uniforme">Uniforme</option>
+                                        <option value="Ferramenta">Ferramenta</option>
+                                        <option value="Consumível">Material Consumível</option>
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label>Unidade de Medida</label>
+                                    <select className="form-select" value={formItem.unidade} onChange={e => setFormItem(p => ({ ...p, unidade: e.target.value }))}>
+                                        <option value="un">Unidade (un)</option>
+                                        <option value="par">Par</option>
+                                        <option value="cx">Caixa (cx)</option>
+                                        <option value="kg">Quilos (kg)</option>
+                                        <option value="m">Metros (m)</option>
+                                        <option value="l">Litros (l)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="form-group">
+                                <label>Alerta de Estoque Mínimo</label>
+                                <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
+                            </div>
+                        </>
+                    )}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                         <button type="button" className="btn-secondary" onClick={() => setModalItemOpen(false)}>Cancelar</button>
                         <button type="submit" className="btn-primary">Salvar</button>
