@@ -1,6 +1,4 @@
-'use client';
-
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { db } from '../firebase/config';
 import { writeBatch, doc } from 'firebase/firestore';
 
@@ -8,13 +6,34 @@ export function FirebaseMigration() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [status, setStatus] = useState<string>('');
     const [loading, setLoading] = useState(false);
+    const [isVisible, setIsVisible] = useState(false);
+    const [isDismissed, setIsDismissed] = useState(true); // Default to true while checking
+
+    useEffect(() => {
+        // Check if user dismissed it before
+        const dismissed = localStorage.getItem('hideMigrationBanner') === 'true';
+        setIsDismissed(dismissed);
+
+        if (!dismissed) {
+            // Show with a delay to avoid flashing during data load
+            const timer = setTimeout(() => {
+                setIsVisible(true);
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, []);
+
+    const dismissBanner = () => {
+        setIsVisible(false);
+        localStorage.setItem('hideMigrationBanner', 'true');
+    };
 
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setLoading(true);
-        setStatus('Lendo arquivo de backup...');
+        setStatus('Lendo backup...');
 
         const reader = new FileReader();
         reader.onload = async (event) => {
@@ -22,31 +41,17 @@ export function FirebaseMigration() {
                 const jsonContent = event.target?.result as string;
                 const data = JSON.parse(jsonContent);
 
-                setStatus('Migrando dados para a Nuvem... Por favor aguarde.');
-
-                // Firestore batch limits to 500 writes per batch. For safety, assuming standard sizes, we might do separate batches or individual loops.
-                // For simplicity and to avoid batch limits, let's just do sequential writes in promises but grouped by collection.
+                setStatus('Sincronizando...');
 
                 const collectionsToMigrate = [
-                    'empresas',
-                    'funcionarios',
-                    'registrosPonto',
-                    'transacoes',
-                    'notas',
-                    'tarefas',
-                    'anotacoes',
-                    'itensEstoque',
-                    'movimentacoesEstoque',
+                    'empresas', 'funcionarios', 'registrosPonto', 'transacoes',
+                    'notas', 'tarefas', 'anotacoes', 'itensEstoque', 'movimentacoesEstoque',
                 ];
 
                 let totalRegistros = 0;
-
                 for (const colName of collectionsToMigrate) {
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     const items = data[colName] as any[];
                     if (items && Array.isArray(items) && items.length > 0) {
-
-                        // Chunking manually to respect potential limits or just looping (less limits on loop than batch)
                         const batch = writeBatch(db);
                         let operationCount = 0;
 
@@ -61,24 +66,18 @@ export function FirebaseMigration() {
                                 operationCount = 0;
                             }
                         }
-                        if (operationCount > 0) {
-                            await batch.commit();
-                        }
+                        if (operationCount > 0) await batch.commit();
                     }
                 }
 
-                setStatus(`Migração concluída com sucesso! ${totalRegistros} itens enviados.`);
-                // Remove locally stored old items to force only firebase context
+                setStatus(`Sucesso! ${totalRegistros} itens migrados.`);
                 localStorage.clear();
+                localStorage.setItem('hideMigrationBanner', 'true');
 
-                // Let user reload to start fresh
-                setTimeout(() => {
-                    window.location.reload();
-                }, 3000);
-
+                setTimeout(() => window.location.reload(), 2000);
             } catch (err) {
-                console.error('Error during migration', err);
-                setStatus('Erro ao processar arquivo: ' + (err as Error).message);
+                console.error(err);
+                setStatus('Erro: ' + (err as Error).message);
             } finally {
                 setLoading(false);
             }
@@ -86,33 +85,77 @@ export function FirebaseMigration() {
         reader.readAsText(file);
     };
 
+    if (isDismissed || !isVisible) return null;
+
     return (
-        <div className="p-4 border border-blue-200 bg-blue-50 rounded-lg my-4">
-            <h3 className="font-bold text-lg mb-2 text-blue-800">Sincronização com Nuvem (Firebase)</h3>
-            <p className="text-sm text-gray-700 mb-4">
-                O sistema agora salva os dados na nuvem para que fiquem sincronizados no seu celular e computador!
-                <br /><br />
-                Para não perder seus dados antigos, clique no botão abaixo e selecione o arquivo <strong>backup_app_gerenciamento_...json</strong> mais recente que você tem na sua pasta Downloads.
-            </p>
-
-            <input
-                type="file"
-                accept=".json"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                className="hidden"
-            />
-
+        <div className="glass-card animate-fade-in" style={{
+            padding: '16px 20px',
+            marginBottom: '24px',
+            background: 'rgba(59, 130, 246, 0.05)',
+            border: '1px solid rgba(59, 130, 246, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
+        }}>
             <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={loading}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                onClick={dismissBanner}
+                style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    padding: '4px',
+                }}
             >
-                {loading ? 'Processando...' : 'Fazer Upload do Backup Inicial'}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
             </button>
 
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div style={{
+                    width: '32px', height: '32px', borderRadius: '8px',
+                    background: 'rgba(59, 130, 246, 0.15)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                </div>
+
+                <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--foreground)', marginBottom: '4px' }}>Sincronização com Nuvem</h4>
+                    <p style={{ fontSize: '12px', color: 'var(--text-muted)', lineHeight: 1.4, margin: 0, paddingRight: '20px' }}>
+                        Clique no botão para importar seu backup local para a nuvem.
+                    </p>
+                </div>
+
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={loading}
+                    className="btn-primary"
+                    style={{
+                        padding: '8px 16px',
+                        fontSize: '12px',
+                        height: 'auto',
+                        whiteSpace: 'nowrap'
+                    }}
+                >
+                    {loading ? 'Processando...' : 'Importar Backup'}
+                </button>
+            </div>
+
+            <input type="file" accept=".json" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+
             {status && (
-                <p className="mt-4 font-semibold text-blue-900">{status}</p>
+                <div style={{
+                    marginTop: '12px',
+                    paddingTop: '12px',
+                    borderTop: '1px solid rgba(255,255,255,0.05)',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#3b82f6'
+                }}>
+                    {status}
+                </div>
             )}
         </div>
     );
