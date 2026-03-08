@@ -22,8 +22,7 @@ export default function AlmoxarifadoPage() {
         nome: '',
         categoria: 'Ferramenta' as 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível',
         unidade: 'un',
-        estoqueMinimo: 5,
-        quantidade: 0
+        estoqueMinimo: 5
     });
 
     // Form Movimentação
@@ -56,7 +55,7 @@ export default function AlmoxarifadoPage() {
 
     // Handlers Item
     const openNewItem = () => {
-        setFormItem({ nome: '', categoria: 'Ferramenta', unidade: 'un', estoqueMinimo: 5, quantidade: 0 });
+        setFormItem({ nome: '', categoria: 'Ferramenta', unidade: 'un', estoqueMinimo: 5 });
         setEditingItemId(null);
         setModalItemOpen(true);
     };
@@ -66,8 +65,7 @@ export default function AlmoxarifadoPage() {
             nome: item.nome,
             categoria: item.categoria,
             unidade: item.unidade,
-            estoqueMinimo: item.estoqueMinimo,
-            quantidade: item.quantidade
+            estoqueMinimo: item.estoqueMinimo
         });
         setEditingItemId(item.id);
         setModalItemOpen(true);
@@ -446,17 +444,9 @@ export default function AlmoxarifadoPage() {
                             </select>
                         </div>
                     </div>
-                    <div className="form-row">
-                        <div className="form-group">
-                            <label>Alerta de Estoque Mínimo</label>
-                            <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
-                        </div>
-                        {!editingItemId && (
-                            <div className="form-group">
-                                <label>Estoque Inicial</label>
-                                <input type="number" min="0" className="form-input" value={formItem.quantidade} onChange={e => setFormItem(p => ({ ...p, quantidade: Number(e.target.value) }))} placeholder="Qtd inicial no sistema" />
-                            </div>
-                        )}
+                    <div className="form-group">
+                        <label>Alerta de Estoque Mínimo</label>
+                        <input type="number" min="0" className="form-input" value={formItem.estoqueMinimo} onChange={e => setFormItem(p => ({ ...p, estoqueMinimo: Number(e.target.value) }))} placeholder="Avisar quando chegar a..." />
                     </div>
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                         <button type="button" className="btn-secondary" onClick={() => setModalItemOpen(false)}>Cancelar</button>

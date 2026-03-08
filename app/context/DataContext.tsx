@@ -162,7 +162,7 @@ interface DataContextType {
 
   // Almoxarifado
   itensEstoque: ItemEstoque[];
-  addItemEstoque: (i: Omit<ItemEstoque, 'id' | 'criadoEm'>) => Promise<void>;
+  addItemEstoque: (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => Promise<void>;
   updateItemEstoque: (id: string, i: Partial<ItemEstoque>) => Promise<void>;
   deleteItemEstoque: (id: string) => Promise<void>;
 
@@ -478,9 +478,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   };
 
   // ---- Almoxarifado ----
-  const addItemEstoque = async (i: Omit<ItemEstoque, 'id' | 'criadoEm'>) => {
+  const addItemEstoque = async (i: Omit<ItemEstoque, 'id' | 'criadoEm' | 'quantidade'>) => {
     await addDoc(collection(db, 'itensEstoque'), {
       ...i,
+      quantidade: 0,
       criadoEm: new Date().toISOString()
     });
   };
