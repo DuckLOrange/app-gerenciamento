@@ -63,6 +63,27 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             ),
         },
         {
+            href: '/ferias',
+            label: 'Férias',
+            adminOnly: false,
+            icon: (
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 10V2H6v8a5 5 0 0 0-1.8 3.5" />
+                    <path d="M22 13.5A3.5 3.5 0 1 1 18.5 10" />
+                    <path d="M5.5 13.5A3.5 3.5 0 1 1 2 10" />
+                    <path d="M12 2v20" />
+                    <mask id="sun-mask" fill="white">
+                        <circle cx="12" cy="12" r="12" />
+                        <rect x="0" y="12" width="24" height="12" fill="black" />
+                    </mask>
+                    <g mask="url(#sun-mask)">
+                        <circle cx="12" cy="11" r="5" />
+                        <path d="M12 2v3M12 17v3M4 11H1M23 11h-3M5.6 4.6l2 2M16.4 17.4l2 2M5.6 17.4l2-2M16.4 4.6l2-2" />
+                    </g>
+                </svg>
+            ),
+        },
+        {
             href: '/agenda',
             label: 'Agenda & Notas',
             adminOnly: false,
@@ -133,7 +154,10 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             style={{
                 transform: isOpen ? 'translateX(0)' : undefined,
                 visibility: isOpen ? 'visible' : undefined,
-                zIndex: 40
+                zIndex: 40,
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh'
             }}
         >
             {/* Close Button (Mobile Only) */}
@@ -164,7 +188,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </button>
 
             {/* Logo */}
-            <div style={{ padding: '24px 20px', borderBottom: '1px solid var(--card-border)' }}>
+            <div style={{ flexShrink: 0, padding: '24px 20px', borderBottom: '1px solid var(--card-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <img
                         src="/logo.png"
@@ -189,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             </div>
 
             {/* Navigation */}
-            <nav style={{ padding: '16px 12px' }}>
+            <nav style={{ flex: 1, overflowY: 'auto', padding: '16px 12px' }}>
                 <div style={{ fontSize: '11px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', padding: '8px 16px', marginBottom: '4px' }}>
                     Menu Principal
                 </div>
@@ -212,10 +236,9 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             {/* User Footer */}
             <div style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
+                flexShrink: 0,
+                marginTop: 'auto',
+                background: 'var(--sidebar-bg)',
                 padding: '16px 20px',
                 borderTop: '1px solid var(--card-border)',
             }}>

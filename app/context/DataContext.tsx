@@ -120,6 +120,16 @@ export interface MovimentacaoEstoque {
   criadoEm: string;
 }
 
+export interface Ferias {
+  id: string;
+  funcionarioId: string;
+  dataInicio: string; // YYYY-MM-DD
+  dataFim: string; // YYYY-MM-DD
+  status: 'pendente' | 'aprovado' | 'concluido' | 'cancelado';
+  observacao: string;
+  criadoEm: string;
+}
+
 interface DataContextType {
   // Empresas
   empresas: Empresa[];
@@ -170,6 +180,12 @@ interface DataContextType {
   movimentacoesEstoque: MovimentacaoEstoque[];
   registrarMovimentacaoEstoque: (m: Omit<MovimentacaoEstoque, 'id' | 'criadoEm'>) => Promise<void>;
 
+  // Férias
+  ferias: Ferias[];
+  addFerias: (f: Omit<Ferias, 'id' | 'criadoEm'>) => Promise<void>;
+  updateFerias: (id: string, f: Partial<Ferias>) => Promise<void>;
+  deleteFerias: (id: string) => Promise<void>;
+
   // Util
   isMigrationLoading: boolean;
 }
@@ -215,6 +231,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const [anotacoes, setAnotacoes] = useState<AnotacaoLivre[]>([]);
   const [itensEstoque, setItensEstoque] = useState<ItemEstoque[]>([]);
   const [movimentacoesEstoque, setMovimentacoesEstoque] = useState<MovimentacaoEstoque[]>([]);
+  const [ferias, setFerias] = useState<Ferias[]>([]);
 
   const [loaded, setLoaded] = useState(false);
   const [isMigrationLoading] = useState(false);
@@ -276,6 +293,12 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       setMovimentacoesEstoque(docs);
     });
 
+    const unsubFerias = onSnapshot(query(collection(db, 'ferias')), (querySnapshot) => {
+      const docs: Ferias[] = [];
+      querySnapshot.forEach((doc) => docs.push({ id: doc.id, ...doc.data() } as Ferias));
+      setFerias(docs);
+    });
+
     setLoaded(true);
 
     // Initial Migration Script Option:
@@ -292,6 +315,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       unsubAnotacoes();
       unsubItens();
       unsubMovimentacoes();
+      unsubFerias();
     };
   }, []);
 
@@ -316,6 +340,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         anotacoes,
         itensEstoque,
         movimentacoesEstoque,
+        ferias,
         dataBackup: new Date().toISOString()
       };
 
@@ -523,6 +548,22 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  // ---- Férias ----
+  const addFerias = async (f: Omit<Ferias, 'id' | 'criadoEm'>) => {
+    await addDoc(collection(db, 'ferias'), {
+      ...f,
+      criadoEm: new Date().toISOString()
+    });
+  };
+
+  const updateFerias = async (id: string, data: Partial<Ferias>) => {
+    await updateDoc(doc(db, 'ferias', id), data);
+  };
+
+  const deleteFerias = async (id: string) => {
+    await deleteDoc(doc(db, 'ferias', id));
+  };
+
   return (
     <DataContext.Provider value={{
       empresas, addEmpresa, updateEmpresa, deleteEmpresa,
@@ -534,6 +575,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       anotacoes, addAnotacao, updateAnotacao, deleteAnotacao,
       itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque,
       movimentacoesEstoque, registrarMovimentacaoEstoque,
+      ferias, addFerias, updateFerias, deleteFerias,
       isMigrationLoading
     }}>
       {children}
