@@ -8,7 +8,7 @@ import Modal from '../components/Modal';
 type TabType = 'todos' | 'EPI' | 'Uniforme' | 'Ferramenta' | 'Consumível' | 'histórico';
 
 export default function AlmoxarifadoPage() {
-    const { itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque, movimentacoesEstoque, registrarMovimentacaoEstoque, funcionarios } = useData();
+    const { itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque, movimentacoesEstoque, registrarMovimentacaoEstoque, deleteMovimentacaoEstoque, funcionarios } = useData();
     const { isAdmin } = useAuth();
 
     const [activeTab, setActiveTab] = useState<TabType>('todos');
@@ -151,6 +151,19 @@ export default function AlmoxarifadoPage() {
         }
     };
 
+    const handleDeleteMovimentacao = async (id: string) => {
+        if (!isAdmin) return;
+        if (confirm('Tem certeza que deseja excluir esta movimentação? O estoque do item será ajustado automaticamente.')) {
+            try {
+                await deleteMovimentacaoEstoque(id);
+                alert('Movimentação excluída e estoque ajustado!');
+            } catch (error) {
+                console.error('Erro ao excluir movimentação:', error);
+                alert('Erro ao excluir movimentação. Tente novamente.');
+            }
+        }
+    };
+
     return (
         <div>
             {/* Header / Resumo */}
@@ -257,6 +270,7 @@ export default function AlmoxarifadoPage() {
                                         <th style={{ textAlign: 'center' }}>Qtd</th>
                                         <th>Tipo</th>
                                         <th>Observação</th>
+                                        <th style={{ textAlign: 'right' }}>Ações</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -314,6 +328,17 @@ export default function AlmoxarifadoPage() {
                                                     </td>
                                                     <td data-label="Observação">
                                                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{mov.observacao || '-'}</span>
+                                                    </td>
+                                                    <td data-label="Ações" style={{ textAlign: 'right' }}>
+                                                        {isAdmin && (
+                                                            <button 
+                                                                className="btn-danger" 
+                                                                style={{ padding: '4px 8px', fontSize: '11px' }} 
+                                                                onClick={() => handleDeleteMovimentacao(mov.id)}
+                                                            >
+                                                                Excluir
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );

@@ -179,6 +179,7 @@ interface DataContextType {
 
   movimentacoesEstoque: MovimentacaoEstoque[];
   registrarMovimentacaoEstoque: (m: Omit<MovimentacaoEstoque, 'id' | 'criadoEm'>) => Promise<void>;
+  deleteMovimentacaoEstoque: (id: string) => Promise<void>;
 
   // Férias
   ferias: Ferias[];
@@ -548,6 +549,35 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const deleteMovimentacaoEstoque = async (id: string) => {
+    const movRef = doc(db, 'movimentacoesEstoque', id);
+    const movSnap = await getDoc(movRef);
+    if (!movSnap.exists()) return;
+
+    const movData = movSnap.data() as MovimentacaoEstoque;
+    const itemRef = doc(db, 'itensEstoque', movData.itemId);
+    const itemSnap = await getDoc(itemRef);
+
+    if (itemSnap.exists()) {
+      const itemData = itemSnap.data();
+      let novaQtd = Number(itemData.quantidade) || 0;
+      const tipo = movData.tipo.toLowerCase();
+
+      // Reverse the calculation
+      if (tipo.includes('entrada') || tipo.includes('devolucao')) {
+        novaQtd -= Number(movData.quantidade);
+      } else if (tipo.includes('saida')) {
+        novaQtd += Number(movData.quantidade);
+      }
+
+      await updateDoc(itemRef, {
+        quantidade: Math.max(0, novaQtd)
+      });
+    }
+
+    await deleteDoc(movRef);
+  };
+
   // ---- Férias ----
   const addFerias = async (f: Omit<Ferias, 'id' | 'criadoEm'>) => {
     await addDoc(collection(db, 'ferias'), {
@@ -574,7 +604,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
       tarefas, addTarefa, updateTarefa, deleteTarefa,
       anotacoes, addAnotacao, updateAnotacao, deleteAnotacao,
       itensEstoque, addItemEstoque, updateItemEstoque, deleteItemEstoque,
-      movimentacoesEstoque, registrarMovimentacaoEstoque,
+      movimentacoesEstoque, registrarMovimentacaoEstoque, deleteMovimentacaoEstoque,
       ferias, addFerias, updateFerias, deleteFerias,
       isMigrationLoading
     }}>
