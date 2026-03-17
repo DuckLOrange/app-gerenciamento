@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { useData, NotaItem } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
 import Modal from '../components/Modal';
+import * as XLSX from 'xlsx';
 
 export default function FaturamentoPage() {
     const { funcionarios, registrosPonto, notas, addNota, updateNotaStatus, deleteNota, empresas } = useData();
@@ -63,6 +64,47 @@ export default function FaturamentoPage() {
         }
     };
 
+    const exportToExcel = (notaId: string) => {
+        const nota = notas.find(n => n.id === notaId);
+        if (!nota) return;
+
+        const data = [
+            ['NOTA DE HONORÁRIOS'],
+            [''],
+            ['Empresa:', nota.empresaNome || 'Não informada'],
+            ['CNPJ:', nota.empresaCnpj || 'Não informado'],
+            ['Mês Referência:', formatMes(nota.mes)],
+            ['Emitida em:', new Date(nota.criadoEm).toLocaleDateString('pt-BR')],
+            [''],
+            ['Profissional', 'Horas', 'Valor/h', 'Subtotal'],
+            ...nota.itens.map(item => [
+                item.funcionarioNome,
+                item.totalHoras,
+                item.valorHora,
+                item.subtotal
+            ]),
+            [''],
+            ['TOTAL DA NOTA', '', '', nota.totalValor],
+            ['Status:', nota.status === 'pago' ? 'Pago' : 'Pendente']
+        ];
+
+        const ws = XLSX.utils.aoa_to_sheet(data);
+
+        // Styling (basic column widths)
+        ws['!cols'] = [
+            { wch: 30 }, // Profissional
+            { wch: 10 }, // Horas
+            { wch: 15 }, // Valor/h
+            { wch: 20 }, // Subtotal
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, 'Nota');
+
+        const fileName = `Nota_${nota.empresaNome || 'SemEmpresa'}_${nota.mes}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+    };
+
     const handleGerarNota = (e: React.FormEvent) => {
         e.preventDefault();
         if (itensCalculados.length === 0 || totalHorasGeral === 0) return;
@@ -80,6 +122,9 @@ export default function FaturamentoPage() {
         });
         setModalOpen(false);
         setSelectedFuncionarios([]);
+
+        // Inform user about next steps or auto-export if needed
+        alert('Nota gerada com sucesso! Você pode exportá-la para Excel na lista de notas.');
     };
 
     const handleDelete = (id: string) => {
@@ -240,6 +285,21 @@ export default function FaturamentoPage() {
                                                             ↩ Desfazer
                                                         </button>
                                                     )}
+                                                    <button
+                                                        className="btn-secondary"
+                                                        style={{ padding: '6px 12px', fontSize: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none' }}
+                                                        onClick={() => exportToExcel(nota.id)}
+                                                        title="Exportar para Excel"
+                                                    >
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+                                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                                            <polyline points="14 2 14 8 20 8" />
+                                                            <line x1="16" y1="13" x2="8" y2="13" />
+                                                            <line x1="16" y1="17" x2="8" y2="17" />
+                                                            <polyline points="10 9 9 9 8 9" />
+                                                        </svg>
+                                                        Excel
+                                                    </button>
                                                     <button
                                                         className="btn-secondary"
                                                         style={{ padding: '6px 12px', fontSize: '12px' }}
@@ -526,6 +586,15 @@ export default function FaturamentoPage() {
                                     <rect x="6" y="14" width="12" height="8" />
                                 </svg>
                                 Imprimir
+                            </button>
+                            <button className="btn-primary" style={{ background: 'linear-gradient(135deg, #10b981, #059669)' }} onClick={() => exportToExcel(notaPreview.id)}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '4px' }}>
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                    <polyline points="14 2 14 8 20 8" />
+                                    <line x1="16" y1="13" x2="8" y2="13" />
+                                    <line x1="16" y1="17" x2="8" y2="17" />
+                                </svg>
+                                Excel
                             </button>
                         </div>
                     </div>
