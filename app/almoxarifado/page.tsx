@@ -91,14 +91,29 @@ export default function AlmoxarifadoPage() {
         }
     };
 
-    const handleDeleteItem = (id: string) => {
-        const temMovimentacao = movimentacoesEstoque.some(m => m.itemId === id);
-        if (temMovimentacao) {
-            alert('Não é possível excluir este item pois ele já possui histórico de movimentação. Ajuste o estoque para 0 se necessário.');
+    const handleDeleteItem = async (id: string) => {
+        const movimentacoesDoItem = movimentacoesEstoque.filter(m => m.itemId === id);
+        
+        if (movimentacoesDoItem.length > 0) {
+            if (confirm(`Este item possui ${movimentacoesDoItem.length} registros de movimentação no histórico. Deseja excluir o item E TODO o seu histórico permanentemente?`)) {
+                try {
+                    // Delete all movements first
+                    for (const mov of movimentacoesDoItem) {
+                        await deleteMovimentacaoEstoque(mov.id);
+                    }
+                    // Then delete the item
+                    await deleteItemEstoque(id);
+                    alert('Item e histórico excluídos com sucesso!');
+                } catch (error) {
+                    console.error('Erro ao excluir item e histórico:', error);
+                    alert('Erro ao excluir. Tente novamente.');
+                }
+            }
             return;
         }
+
         if (confirm('Tem certeza que deseja excluir este item do catálogo?')) {
-            deleteItemEstoque(id);
+            await deleteItemEstoque(id);
         }
     };
 
@@ -128,8 +143,9 @@ export default function AlmoxarifadoPage() {
             }
         }
 
-        // Validação de funcionário
-        if ((formMov.tipo === 'saida' || formMov.tipo === 'devolucao') && !formMov.funcionarioId) {
+        // Validação de funcionário: só obriga se houver funcionários ativos cadastrados
+        const temFuncionariosAtivos = funcionarios.some(f => f.status === 'ativo');
+        if ((formMov.tipo === 'saida' || formMov.tipo === 'devolucao') && temFuncionariosAtivos && !formMov.funcionarioId) {
             alert('Por favor, selecione o funcionário responsável pela retirada/devolução.');
             return;
         }
@@ -519,8 +535,8 @@ export default function AlmoxarifadoPage() {
                     {(formMov.tipo === 'saida' || formMov.tipo === 'devolucao') && (
                         <div className="form-group animate-fade-in">
                             <label>Funcionário Responsável</label>
-                            <select className="form-select" value={formMov.funcionarioId} onChange={e => setFormMov(p => ({ ...p, funcionarioId: e.target.value }))} required>
-                                <option value="">Selecione quem está retirando/devolvendo...</option>
+                            <select className="form-select" value={formMov.funcionarioId} onChange={e => setFormMov(p => ({ ...p, funcionarioId: e.target.value }))}>
+                                <option value="">{funcionarios.filter(f => f.status === 'ativo').length > 0 ? 'Selecione quem está retirando/devolvendo...' : 'Nenhum funcionário cadastrado'}</option>
                                 {funcionarios.filter(f => f.status === 'ativo').map(f => (
                                     <option key={f.id} value={f.id}>{f.nome} - {f.cargo}</option>
                                 ))}
