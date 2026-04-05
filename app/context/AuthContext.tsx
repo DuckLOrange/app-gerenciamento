@@ -9,6 +9,7 @@ import {
     updatePassword,
     reauthenticateWithCredential,
     EmailAuthProvider,
+    sendPasswordResetEmail,
     User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -39,6 +40,7 @@ interface AuthContextType {
     updateUserProfile: (id: string, data: Partial<AppUser>) => Promise<void>;
     deleteUserProfile: (id: string) => Promise<void>;
     changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+    resetPassword: (email: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -171,6 +173,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
     }, []);
 
+    const resetPassword = useCallback(async (email: string) => {
+        const trimmedEmail = email.trim();
+        const validEmail = (trimmedEmail.includes('@') ? trimmedEmail : `${trimmedEmail}@app.com`);
+
+        try {
+            await sendPasswordResetEmail(auth, validEmail);
+        } catch (error: any) {
+            console.error('Erro ao enviar e-mail de recuperação:', error);
+            if (error.code === 'auth/user-not-found') {
+                throw new Error('Usuário não encontrado.');
+            }
+            throw new Error(error.message || 'Erro ao enviar e-mail de recuperação.');
+        }
+    }, []);
+
     const isAdmin = currentUser?.role === 'admin';
 
     // During loading, we show nothing or a spinner
@@ -187,6 +204,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             updateUserProfile,
             deleteUserProfile,
             changePassword,
+            resetPassword,
         }}>
             {children}
         </AuthContext.Provider>
