@@ -3,27 +3,16 @@
 import { useState } from 'react';
 import { useAuth, AppUser } from '../context/AuthContext';
 import Modal from '../components/Modal';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 export default function UsuariosPage() {
     const { users, addUserProfile, updateUserProfile, deleteUserProfile, isAdmin, currentUser } = useAuth();
     const [modalOpen, setModalOpen] = useState(false);
+    const [passwordModalOpen, setPasswordModalOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState({ id: '', username: '', nome: '', role: 'usuario' as 'admin' | 'usuario' });
 
-    // Only admin can access this page
-    if (!isAdmin) {
-        return (
-            <div className="glass-card" style={{ padding: '48px', textAlign: 'center' }}>
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="1.5" style={{ marginBottom: '16px', opacity: 0.3 }}>
-                    <rect x="3" y="11" width="18" height="11" rx="2" />
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: 'var(--text-muted)' }}>
-                    Acesso restrito ao administrador
-                </p>
-            </div>
-        );
-    }
+    const displayedUsers = isAdmin ? users : users.filter(u => u.id === currentUser?.id);
 
     const openNew = () => {
         setForm({ id: '', username: '', nome: '', role: 'usuario' });
@@ -76,15 +65,17 @@ export default function UsuariosPage() {
         <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-                    {users.length} usuário{users.length !== 1 ? 's' : ''} cadastrado{users.length !== 1 ? 's' : ''}
+                    {displayedUsers.length} usuário{displayedUsers.length !== 1 ? 's' : ''} {isAdmin ? 'cadastrado' : 'encontrado'}{displayedUsers.length !== 1 ? 's' : ''}
                 </p>
-                <button className="btn-primary" onClick={openNew} id="btn-add-usuario">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                        <line x1="12" y1="5" x2="12" y2="19" />
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                    </svg>
-                    Novo Usuário
-                </button>
+                {isAdmin && (
+                    <button className="btn-primary" onClick={openNew} id="btn-add-usuario">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                            <line x1="12" y1="5" x2="12" y2="19" />
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                        </svg>
+                        Novo Usuário
+                    </button>
+                )}
             </div>
 
             <div className="glass-card animate-fade-in" style={{ overflow: 'hidden' }}>
@@ -99,7 +90,7 @@ export default function UsuariosPage() {
                         </tr>
                     </thead>
                     <tbody>
-                        {users.map((u) => (
+                        {displayedUsers.map((u) => (
                             <tr key={u.id}>
                                 <td>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -129,10 +120,17 @@ export default function UsuariosPage() {
                                 </td>
                                 <td style={{ textAlign: 'right' }}>
                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                        <button className="btn-secondary" onClick={() => openEdit(u)} style={{ padding: '6px 12px', fontSize: '12px' }}>
-                                            Editar
-                                        </button>
-                                        {u.id !== 'admin-default' && u.id !== currentUser?.id && (
+                                        {u.id === currentUser?.id && (
+                                            <button className="btn-primary" onClick={() => setPasswordModalOpen(true)} style={{ padding: '6px 12px', fontSize: '12px', background: 'var(--accent-primary)' }}>
+                                                Alterar Senha
+                                            </button>
+                                        )}
+                                        {isAdmin && (
+                                            <button className="btn-secondary" onClick={() => openEdit(u)} style={{ padding: '6px 12px', fontSize: '12px' }}>
+                                                Editar
+                                            </button>
+                                        )}
+                                        {isAdmin && u.id !== 'admin-default' && u.id !== currentUser?.id && (
                                             <button className="btn-danger" onClick={() => handleDelete(u.id)}>
                                                 Excluir
                                             </button>
@@ -186,54 +184,55 @@ export default function UsuariosPage() {
                             />
                         </div>
                     </div>
-                    <div className="form-group">
-                        <label>Perfil de Acesso</label>
-                        {/* ... roles buttons remains same ... */}
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                type="button"
-                                onClick={() => setForm(prev => ({ ...prev, role: 'admin' }))}
-                                style={{
-                                    flex: 1,
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${form.role === 'admin' ? '#fbbf24' : 'var(--card-border)'}`,
-                                    background: form.role === 'admin' ? 'rgba(245,158,11,0.1)' : 'transparent',
-                                    color: form.role === 'admin' ? '#fbbf24' : 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '13px',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                <div>👑 Administrador</div>
-                                <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '4px', opacity: 0.7 }}>
-                                    Acesso total ao sistema
-                                </div>
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => setForm(prev => ({ ...prev, role: 'usuario' }))}
-                                style={{
-                                    flex: 1,
-                                    padding: '12px',
-                                    borderRadius: '10px',
-                                    border: `2px solid ${form.role === 'usuario' ? '#22d3ee' : 'var(--card-border)'}`,
-                                    background: form.role === 'usuario' ? 'rgba(6,182,212,0.1)' : 'transparent',
-                                    color: form.role === 'usuario' ? '#22d3ee' : 'var(--text-muted)',
-                                    cursor: 'pointer',
-                                    fontWeight: 600,
-                                    fontSize: '13px',
-                                    transition: 'all 0.2s',
-                                }}
-                            >
-                                <div>👤 Usuário</div>
-                                <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '4px', opacity: 0.7 }}>
-                                    Funcionalidades básicas
-                                </div>
-                            </button>
+                    {isAdmin && (
+                        <div className="form-group">
+                            <label>Perfil de Acesso</label>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setForm(prev => ({ ...prev, role: 'admin' }))}
+                                    style={{
+                                        flex: 1,
+                                        padding: '12px',
+                                        borderRadius: '10px',
+                                        border: `2px solid ${form.role === 'admin' ? '#fbbf24' : 'var(--card-border)'}`,
+                                        background: form.role === 'admin' ? 'rgba(245,158,11,0.1)' : 'transparent',
+                                        color: form.role === 'admin' ? '#fbbf24' : 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: '13px',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >
+                                    <div>👑 Administrador</div>
+                                    <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '4px', opacity: 0.7 }}>
+                                        Acesso total ao sistema
+                                    </div>
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setForm(prev => ({ ...prev, role: 'usuario' }))}
+                                    style={{
+                                        flex: 1,
+                                        padding: '12px',
+                                        borderRadius: '10px',
+                                        border: `2px solid ${form.role === 'usuario' ? '#22d3ee' : 'var(--card-border)'}`,
+                                        background: form.role === 'usuario' ? 'rgba(6,182,212,0.1)' : 'transparent',
+                                        color: form.role === 'usuario' ? '#22d3ee' : 'var(--text-muted)',
+                                        cursor: 'pointer',
+                                        fontWeight: 600,
+                                        fontSize: '13px',
+                                        transition: 'all 0.2s',
+                                    }}
+                                >
+                                    <div>👤 Usuário</div>
+                                    <div style={{ fontSize: '11px', fontWeight: 400, marginTop: '4px', opacity: 0.7 }}>
+                                        Funcionalidades básicas
+                                    </div>
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                     {!editingId && (
                         <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '12px' }}>
                             💡 <strong>Dica:</strong> Primeiro crie o usuário no Painel do Firebase (Authentication) e depois copie o &quot;User UID&quot; dele para colar acima.
@@ -247,6 +246,11 @@ export default function UsuariosPage() {
                     </div>
                 </form>
             </Modal>
+
+            <ChangePasswordModal
+                isOpen={passwordModalOpen}
+                onClose={() => setPasswordModalOpen(false)}
+            />
         </div>
     );
 }

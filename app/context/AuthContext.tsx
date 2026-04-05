@@ -6,6 +6,9 @@ import {
     onAuthStateChanged,
     signInWithEmailAndPassword,
     signOut,
+    updatePassword,
+    reauthenticateWithCredential,
+    EmailAuthProvider,
     User as FirebaseUser
 } from 'firebase/auth';
 import {
@@ -35,6 +38,7 @@ interface AuthContextType {
     addUserProfile: (u: Omit<AppUser, 'id' | 'criadoEm'> & { id: string }) => Promise<void>;
     updateUserProfile: (id: string, data: Partial<AppUser>) => Promise<void>;
     deleteUserProfile: (id: string) => Promise<void>;
+    changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -147,6 +151,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         await deleteDoc(doc(db, 'perfisUsuarios', id));
     }, []);
 
+    const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+        const user = auth.currentUser;
+        if (!user || !user.email) throw new Error('Usuário não autenticado.');
+
+        const credential = EmailAuthProvider.credential(user.email, currentPassword);
+
+        try {
+            await reauthenticateWithCredential(user, credential);
+            await updatePassword(user, newPassword);
+        } catch (error: any) {
+            console.error('Erro ao trocar senha:', error);
+            if (error.code === 'auth/wrong-password') {
+                throw new Error('A senha atual está incorreta.');
+            } else if (error.code === 'auth/weak-password') {
+                throw new Error('A nova senha é muito fraca. Tente uma senha mais curta ou complexa.');
+            }
+            throw new Error(error.message || 'Erro ao trocar senha.');
+        }
+    }, []);
+
     const isAdmin = currentUser?.role === 'admin';
 
     // During loading, we show nothing or a spinner
@@ -162,6 +186,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             addUserProfile,
             updateUserProfile,
             deleteUserProfile,
+            changePassword,
         }}>
             {children}
         </AuthContext.Provider>

@@ -1,8 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '../context/AuthContext';
+import ChangePasswordModal from './ChangePasswordModal';
 
 interface SidebarProps {
     isOpen?: boolean;
@@ -12,6 +14,7 @@ interface SidebarProps {
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     const pathname = usePathname();
     const { currentUser, isAdmin, logout } = useAuth();
+    const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
 
     const menuItems = [
         {
@@ -136,7 +139,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         {
             href: '/usuarios',
             label: 'Usuários',
-            adminOnly: true,
+            adminOnly: false,
             icon: (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
@@ -258,34 +261,66 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
                             </div>
                         </div>
                     </div>
-                    <button
-                        onClick={logout}
-                        title="Sair"
-                        id="btn-logout"
-                        style={{
-                            background: 'rgba(255,255,255,0.06)',
-                            border: 'none',
-                            borderRadius: '8px',
-                            width: '32px',
-                            height: '32px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            cursor: 'pointer',
-                            color: 'var(--text-muted)',
-                            transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#f87171'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
-                    >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                            <polyline points="16 17 21 12 16 7" />
-                            <line x1="21" y1="12" x2="9" y2="12" />
-                        </svg>
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={() => setIsPasswordModalOpen(true)}
+                            title="Trocar Senha"
+                            id="btn-change-password"
+                            style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: 'none',
+                                borderRadius: '8px',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,158,11,0.15)'; e.currentTarget.style.color = '#f59e0b'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </button>
+                        <button
+                            onClick={logout}
+                            title="Sair"
+                            id="btn-logout"
+                            style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: 'none',
+                                borderRadius: '8px',
+                                width: '32px',
+                                height: '32px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                color: 'var(--text-muted)',
+                                transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239,68,68,0.15)'; e.currentTarget.style.color = '#f87171'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; e.currentTarget.style.color = 'var(--text-muted)'; }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                <polyline points="16 17 21 12 16 7" />
+                                <line x1="21" y1="12" x2="9" y2="12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
+
+            <ChangePasswordModal
+                isOpen={isPasswordModalOpen}
+                onClose={() => setIsPasswordModalOpen(false)}
+            />
         </aside>
     );
 }
